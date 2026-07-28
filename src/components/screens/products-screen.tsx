@@ -4,6 +4,7 @@ import {
   useStore,
   formatINR,
   PRODUCT_CATEGORIES,
+  PRODUCT_UNITS,
   type Product,
   type ProductCategory,
 } from "@/lib/store";
@@ -64,7 +65,7 @@ export function ProductsScreen() {
                       )}
                       {p.hasVariants && (
                         <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning">
-                          Shades
+                          {p.shades && p.shades.length > 0 ? `${p.shades.length} shades` : "Shades"}
                         </span>
                       )}
                     </div>
@@ -156,10 +157,14 @@ function ProductFormModal({
   const [code, setCode] = useState("");
   const [buying, setBuying] = useState("");
   const [selling, setSelling] = useState("");
-  const [unit, setUnit] = useState("");
+  const [unit, setUnit] = useState<string>("Pcs");
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [category, setCategory] = useState<ProductCategory | "">("");
   const [hasVariants, setHasVariants] = useState(false);
+  const [shades, setShades] = useState<string[]>([]);
+  const [shadeInput, setShadeInput] = useState("");
+  const [opening, setOpening] = useState("");
+  const [threshold, setThreshold] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [lastKey, setLastKey] = useState<string | null>(null);
@@ -170,10 +175,14 @@ function ProductFormModal({
     setCode(product?.code ?? "");
     setBuying(product ? String(product.buyingPrice) : "");
     setSelling(product ? String(product.sellingPrice) : "");
-    setUnit(product?.unit ?? "");
+    setUnit(product?.unit ?? "Pcs");
     setImageUrl(product?.imageUrl);
     setCategory(product?.category ?? "");
     setHasVariants(product?.hasVariants ?? false);
+    setShades(product?.shades ?? []);
+    setShadeInput("");
+    setOpening(product ? String(product.openingStock) : "");
+    setThreshold(product ? String(product.lowStockThreshold) : "");
   }
 
   const onPickFile = (file: File | undefined) => {
@@ -183,6 +192,13 @@ function ProductFormModal({
     reader.readAsDataURL(file);
   };
 
+  const addShade = () => {
+    const v = shadeInput.trim();
+    if (!v) return;
+    setShades((prev) => [...prev, v]);
+    setShadeInput("");
+  };
+
   const submit = () => {
     if (!name.trim()) return;
     onSubmit({
@@ -190,10 +206,13 @@ function ProductFormModal({
       code: code.trim() || "PRD-000",
       buyingPrice: Number(buying) || 0,
       sellingPrice: Number(selling) || 0,
-      unit: unit.trim() || "unit",
+      unit: unit.trim() || "Pcs",
       imageUrl,
       category: category || undefined,
       hasVariants,
+      shades: hasVariants ? shades : [],
+      openingStock: Number(opening) || 0,
+      lowStockThreshold: Number(threshold) || 0,
     });
   };
 
@@ -244,9 +263,6 @@ function ProductFormModal({
           </div>
         </div>
 
-        <FormRow label="Product Name" value={name} onChange={setName} placeholder="e.g. Matte Lipstick" />
-        <FormRow label="Product Code" value={code} onChange={setCode} placeholder="PRD-001" />
-
         {/* Category */}
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-foreground">Category</span>
@@ -264,31 +280,97 @@ function ProductFormModal({
           </select>
         </label>
 
-        <FormRow label="Buying Price (₹)" value={buying} onChange={setBuying} placeholder="0" type="number" />
-        <FormRow label="Selling Price (₹)" value={selling} onChange={setSelling} placeholder="0" type="number" />
-        <FormRow label="Unit" value={unit} onChange={setUnit} placeholder="e.g. pack, kg, bottle" />
+        <FormRow label="Product Name" value={name} onChange={setName} placeholder="e.g. Matte Lipstick" />
+        <FormRow label="Product Code (SKU)" value={code} onChange={setCode} placeholder="PRD-001" />
+
+        {/* Unit */}
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-foreground">Unit</span>
+          <select
+            value={unit}
+            onChange={(e) => setUnit(e.target.value)}
+            className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+          >
+            {PRODUCT_UNITS.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <FormRow label="Cost / Buying (₹)" value={buying} onChange={setBuying} placeholder="0" type="number" />
+          <FormRow label="Selling / MRP (₹)" value={selling} onChange={setSelling} placeholder="0" type="number" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <FormRow label="Opening Stock" value={opening} onChange={setOpening} placeholder="0" type="number" />
+          <FormRow label="Low Stock Alert" value={threshold} onChange={setThreshold} placeholder="0" type="number" />
+        </div>
 
         {/* Variants toggle */}
-        <div className="flex items-center justify-between rounded-xl bg-surface px-3.5 py-3">
-          <div>
-            <p className="text-sm font-medium text-foreground">Shades / Variants</p>
-            <p className="text-xs text-muted-foreground">Enable for cosmetics shades or numbers</p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={hasVariants}
-            onClick={() => setHasVariants((v) => !v)}
-            className={`relative h-6 w-11 rounded-full transition-colors ${
-              hasVariants ? "bg-primary" : "bg-muted-foreground/30"
-            }`}
-          >
-            <span
-              className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${
-                hasVariants ? "translate-x-5" : "translate-x-0"
+        <div className="rounded-xl bg-surface p-3.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Has Shades / Variants?</p>
+              <p className="text-xs text-muted-foreground">Enable for cosmetics shades or numbers</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={hasVariants}
+              onClick={() => setHasVariants((v) => !v)}
+              className={`relative h-6 w-11 rounded-full transition-colors ${
+                hasVariants ? "bg-primary" : "bg-muted-foreground/30"
               }`}
-            />
-          </button>
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${
+                  hasVariants ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
+          {hasVariants && (
+            <div className="mt-3 space-y-2">
+              <div className="flex gap-2">
+                <input
+                  value={shadeInput}
+                  onChange={(e) => setShadeInput(e.target.value)}
+                  placeholder="e.g. Shade 01, Natural Beige"
+                  className="flex-1 rounded-lg bg-card px-3 py-2 text-sm outline-none ring-1 ring-black/5 focus:ring-primary/40"
+                />
+                <button
+                  type="button"
+                  onClick={addShade}
+                  className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+                >
+                  Add
+                </button>
+              </div>
+              {shades.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {shades.map((s, i) => (
+                    <span
+                      key={`${s}-${i}`}
+                      className="flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-primary"
+                    >
+                      {s}
+                      <button
+                        type="button"
+                        onClick={() => setShades((prev) => prev.filter((_, idx) => idx !== i))}
+                        aria-label={`Remove ${s}`}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">

@@ -19,7 +19,10 @@ export type ScreenName =
   | "beatDetail"
   | "products"
   | "orderBooking"
-  | "duesLedger";
+  | "duesLedger"
+  | "inventory"
+  | "purchaseBill"
+  | "pendingOrders";
 
 export type ScreenEntry = {
   name: ScreenName;
@@ -53,6 +56,9 @@ export type ProductCategory = "Eye" | "Face" | "Lip" | "Hair" | "Nail Care";
 
 export const PRODUCT_CATEGORIES: ProductCategory[] = ["Eye", "Face", "Lip", "Hair", "Nail Care"];
 
+export const PRODUCT_UNITS = ["Pcs", "Box", "Set", "Pack"] as const;
+export type ProductUnit = (typeof PRODUCT_UNITS)[number] | string;
+
 export type Product = {
   id: string;
   name: string;
@@ -63,6 +69,9 @@ export type Product = {
   imageUrl?: string;
   category?: ProductCategory;
   hasVariants?: boolean;
+  shades?: string[];
+  openingStock: number;
+  lowStockThreshold: number;
 };
 
 export type Transaction = {
@@ -72,6 +81,49 @@ export type Transaction = {
   subtitle: string;
   amount: number;
   time: string;
+};
+
+export type OrderLine = { productId: string; qty: number; price: number };
+export type OrderStatus = "pending" | "dispatched" | "delivered";
+
+export type Order = {
+  id: string;
+  shopId: string;
+  shopName: string;
+  beatName: string;
+  lines: OrderLine[];
+  total: number;
+  summary: string;
+  status: OrderStatus;
+  createdAt: string;
+  deliveredAt?: string;
+};
+
+export type PurchaseBillLine = { productId: string; qty: number; price: number };
+export type PurchaseBill = {
+  id: string;
+  supplier: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  lines: PurchaseBillLine[];
+  total: number;
+  createdAt: string;
+};
+
+export type StockMovement = {
+  id: string;
+  type: "inward" | "outward";
+  productId: string;
+  qty: number;
+  note: string;
+  at: string;
+};
+
+export type StockLevels = {
+  physical: number;
+  reserved: number;
+  available: number;
+  status: "in" | "low" | "out";
 };
 
 /* -------------------------------- Seed data ------------------------------- */
@@ -100,12 +152,12 @@ const seedShops: Shop[] = [
 ];
 
 const seedProducts: Product[] = [
-  { id: "p1", name: "Cooking Oil 1L", code: "PRD-001", buyingPrice: 120, sellingPrice: 145, unit: "bottle" },
-  { id: "p2", name: "Tea 500g", code: "PRD-002", buyingPrice: 210, sellingPrice: 260, unit: "pack" },
-  { id: "p3", name: "Wheat Flour 10kg", code: "PRD-003", buyingPrice: 340, sellingPrice: 399, unit: "kg" },
-  { id: "p4", name: "Basmati Rice 5kg", code: "PRD-004", buyingPrice: 480, sellingPrice: 560, unit: "pack" },
-  { id: "p5", name: "Sugar 1kg", code: "PRD-005", buyingPrice: 42, sellingPrice: 52, unit: "kg" },
-  { id: "p6", name: "Detergent 1kg", code: "PRD-006", buyingPrice: 95, sellingPrice: 120, unit: "pack" },
+  { id: "p1", name: "Cooking Oil 1L", code: "PRD-001", buyingPrice: 120, sellingPrice: 145, unit: "Pcs", openingStock: 80, lowStockThreshold: 20 },
+  { id: "p2", name: "Tea 500g", code: "PRD-002", buyingPrice: 210, sellingPrice: 260, unit: "Pack", openingStock: 45, lowStockThreshold: 15 },
+  { id: "p3", name: "Wheat Flour 10kg", code: "PRD-003", buyingPrice: 340, sellingPrice: 399, unit: "Pack", openingStock: 12, lowStockThreshold: 15 },
+  { id: "p4", name: "Basmati Rice 5kg", code: "PRD-004", buyingPrice: 480, sellingPrice: 560, unit: "Pack", openingStock: 25, lowStockThreshold: 10 },
+  { id: "p5", name: "Sugar 1kg", code: "PRD-005", buyingPrice: 42, sellingPrice: 52, unit: "Pcs", openingStock: 0, lowStockThreshold: 20 },
+  { id: "p6", name: "Detergent 1kg", code: "PRD-006", buyingPrice: 95, sellingPrice: 120, unit: "Pack", openingStock: 60, lowStockThreshold: 20 },
 ];
 
 const seedTransactions: Transaction[] = [
@@ -113,10 +165,27 @@ const seedTransactions: Transaction[] = [
   { id: "t2", type: "collection", title: "Collection: Apex Supermarket", subtitle: "Mode: UPI • Ref: RCP-88902", amount: 5000, time: "11:30 AM" },
 ];
 
+const seedOrders: Order[] = [
+  {
+    id: "o-seed-1",
+    shopId: "s2",
+    shopName: "Gupta Provision Hub",
+    beatName: "Rambagh",
+    lines: [
+      { productId: "p1", qty: 10, price: 145 },
+      { productId: "p2", qty: 5, price: 260 },
+      { productId: "p3", qty: 2, price: 399 },
+    ],
+    total: 4500,
+    summary: "10x Cooking Oil 1L, 5x Tea 500g, 2x Wheat Flour 10kg",
+    status: "pending",
+    createdAt: new Date().toISOString(),
+  },
+];
+
 /* ------------------------------ Context shape ----------------------------- */
 
 type StoreValue = {
-  // navigation
   activeTab: TabId;
   current: ScreenEntry;
   canGoBack: boolean;
@@ -124,7 +193,6 @@ type StoreValue = {
   goBack: () => void;
   switchTab: (tab: TabId) => void;
 
-  // data
   profile: { name: string; role: string; zone: string; online: boolean };
   dailyTarget: number;
   achievedToday: number;
@@ -132,15 +200,19 @@ type StoreValue = {
   shops: Shop[];
   products: Product[];
   transactions: Transaction[];
+  orders: Order[];
+  purchaseBills: PurchaseBill[];
+  stockMovements: StockMovement[];
   syncEnabled: boolean;
 
-  // derived
   shopsForBeat: (beatId: string) => Shop[];
   duesForBeat: (beatId: string) => number;
   totalOutstanding: number;
   totalShops: number;
 
-  // mutations
+  stockFor: (productId: string) => StockLevels;
+  pendingOrders: Order[];
+
   setSyncEnabled: (v: boolean) => void;
   setDailyTarget: (v: number) => void;
   addBeat: (name: string, area: string) => void;
@@ -150,7 +222,9 @@ type StoreValue = {
   addProduct: (p: Omit<Product, "id">) => void;
   updateProduct: (p: Product) => void;
   deleteProduct: (id: string) => void;
-  placeOrder: (shopId: string, amount: number, summary: string, beatName: string) => void;
+  placeOrder: (shopId: string, lines: OrderLine[], beatName: string) => void;
+  markOrderStatus: (orderId: string, status: OrderStatus) => void;
+  addPurchaseBill: (bill: Omit<PurchaseBill, "id" | "createdAt" | "total">) => void;
   collectPayment: (shopId: string, amount: number, mode: string) => void;
 };
 
@@ -173,6 +247,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [shops, setShops] = useState<Shop[]>(seedShops);
   const [products, setProducts] = useState<Product[]>(seedProducts);
   const [transactions, setTransactions] = useState<Transaction[]>(seedTransactions);
+  const [orders, setOrders] = useState<Order[]>(seedOrders);
+  const [purchaseBills, setPurchaseBills] = useState<PurchaseBill[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [syncEnabled, setSyncEnabled] = useState(true);
 
   const value = useMemo<StoreValue>(() => {
@@ -181,6 +258,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       shopsForBeat(beatId).reduce((sum, s) => sum + s.dues, 0);
     const totalOutstanding = shops.reduce((sum, s) => sum + s.dues, 0);
     const achievedToday = beats.reduce((sum, b) => sum + b.salesToday, 0);
+
+    const stockFor = (productId: string): StockLevels => {
+      const p = products.find((x) => x.id === productId);
+      const opening = p?.openingStock ?? 0;
+      const threshold = p?.lowStockThreshold ?? 0;
+      const inward = stockMovements
+        .filter((m) => m.productId === productId && m.type === "inward")
+        .reduce((s, m) => s + m.qty, 0);
+      const outward = stockMovements
+        .filter((m) => m.productId === productId && m.type === "outward")
+        .reduce((s, m) => s + m.qty, 0);
+      const physical = opening + inward - outward;
+      const reserved = orders
+        .filter((o) => o.status !== "delivered")
+        .flatMap((o) => o.lines)
+        .filter((l) => l.productId === productId)
+        .reduce((s, l) => s + l.qty, 0);
+      const available = Math.max(0, physical - reserved);
+      const status: StockLevels["status"] =
+        physical <= 0 ? "out" : available <= threshold ? "low" : "in";
+      return { physical, reserved, available, status };
+    };
+
+    const pendingOrders = orders.filter((o) => o.status !== "delivered");
 
     const navigate: StoreValue["navigate"] = (name, params) => {
       setStack((prev) => [...prev, { name, params }]);
@@ -202,6 +303,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setStack([{ name: tab }]);
     };
 
+    const nowTime = () =>
+      new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+
     return {
       activeTab,
       current: stack[stack.length - 1],
@@ -217,25 +321,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       shops,
       products,
       transactions,
+      orders,
+      purchaseBills,
+      stockMovements,
       syncEnabled,
 
       shopsForBeat,
       duesForBeat,
       totalOutstanding,
       totalShops: shops.length,
+      stockFor,
+      pendingOrders,
 
       setSyncEnabled,
       setDailyTarget,
       addBeat: (name, area) =>
         setBeats((prev) => [
           ...prev,
-          {
-            id: `beat-${Date.now()}`,
-            name,
-            area,
-            location: area,
-            salesToday: 0,
-          },
+          { id: `beat-${Date.now()}`, name, area, location: area, salesToday: 0 },
         ]),
       renameBeat: (beatId, name) =>
         setBeats((prev) => prev.map((b) => (b.id === beatId ? { ...b, name } : b))),
@@ -250,28 +353,89 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateProduct: (p) =>
         setProducts((prev) => prev.map((x) => (x.id === p.id ? p : x))),
       deleteProduct: (id) => setProducts((prev) => prev.filter((p) => p.id !== id)),
-      placeOrder: (shopId, amount, summary, beatName) => {
+
+      placeOrder: (shopId, lines, beatName) => {
+        const shop = shops.find((s) => s.id === shopId);
+        if (!shop || lines.length === 0) return;
+        const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
+        const summary = lines
+          .map((l) => {
+            const p = products.find((x) => x.id === l.productId);
+            return `${l.qty}x ${p?.name ?? "Item"}`;
+          })
+          .join(", ");
+        const order: Order = {
+          id: `ord-${Date.now()}`,
+          shopId,
+          shopName: shop.name,
+          beatName,
+          lines,
+          total,
+          summary,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+        };
+        setOrders((prev) => [order, ...prev]);
         setShops((prev) =>
           prev.map((s) =>
-            s.id === shopId ? { ...s, status: "ordered", orderAmount: amount } : s,
+            s.id === shopId ? { ...s, status: "ordered", orderAmount: total } : s,
           ),
         );
-        const shop = shops.find((s) => s.id === shopId);
         setTransactions((prev) => [
           {
             id: `tx-${Date.now()}`,
             type: "order",
-            title: `Order: ${shop?.name ?? "Shop"}`,
+            title: `Order: ${shop.name}`,
             subtitle: `${beatName} • ${summary}`,
-            amount,
-            time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+            amount: total,
+            time: nowTime(),
           },
           ...prev,
         ]);
         setBeats((prev) =>
-          prev.map((b) => (b.name === beatName ? { ...b, salesToday: b.salesToday + amount } : b)),
+          prev.map((b) => (b.name === beatName ? { ...b, salesToday: b.salesToday + total } : b)),
         );
       },
+
+      markOrderStatus: (orderId, status) => {
+        setOrders((prev) => {
+          const target = prev.find((o) => o.id === orderId);
+          if (!target) return prev;
+          if (status === "delivered" && target.status !== "delivered") {
+            const at = new Date().toISOString();
+            const movements: StockMovement[] = target.lines.map((l, i) => ({
+              id: `mv-${Date.now()}-${i}`,
+              type: "outward",
+              productId: l.productId,
+              qty: l.qty,
+              note: `Delivered to ${target.shopName}`,
+              at,
+            }));
+            setStockMovements((m) => [...movements, ...m]);
+            return prev.map((o) =>
+              o.id === orderId ? { ...o, status: "delivered", deliveredAt: at } : o,
+            );
+          }
+          return prev.map((o) => (o.id === orderId ? { ...o, status } : o));
+        });
+      },
+
+      addPurchaseBill: (bill) => {
+        const id = `pb-${Date.now()}`;
+        const createdAt = new Date().toISOString();
+        const total = bill.lines.reduce((s, l) => s + l.qty * l.price, 0);
+        setPurchaseBills((prev) => [{ ...bill, id, createdAt, total }, ...prev]);
+        const movements: StockMovement[] = bill.lines.map((l, i) => ({
+          id: `mv-${Date.now()}-${i}`,
+          type: "inward",
+          productId: l.productId,
+          qty: l.qty,
+          note: `Received from ${bill.supplier} • ${bill.invoiceNumber}`,
+          at: createdAt,
+        }));
+        setStockMovements((m) => [...movements, ...m]);
+      },
+
       collectPayment: (shopId, amount, mode) => {
         setShops((prev) =>
           prev.map((s) =>
@@ -288,13 +452,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             title: `Collection: ${shop?.name ?? "Shop"}`,
             subtitle: `Mode: ${mode} • Ref: RCP-${Math.floor(10000 + Math.random() * 89999)}`,
             amount,
-            time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+            time: nowTime(),
           },
           ...prev,
         ]);
       },
     };
-  }, [stack, activeTab, profile, dailyTarget, beats, shops, products, transactions, syncEnabled]);
+  }, [stack, activeTab, profile, dailyTarget, beats, shops, products, transactions, orders, purchaseBills, stockMovements, syncEnabled]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
