@@ -21,8 +21,11 @@ export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId
 
   const confirm = () => {
     if (!shop || lines.length === 0) return;
-    const summary = lines.map((l) => `${l.q}x ${l.p.name}`).join(", ");
-    placeOrder(shop.id, total, summary, beat?.name ?? "Beat");
+    placeOrder(
+      shop.id,
+      lines.map((l) => ({ productId: l.p.id, qty: l.q, price: l.p.sellingPrice })),
+      beat?.name ?? "Beat",
+    );
     goBack();
   };
 

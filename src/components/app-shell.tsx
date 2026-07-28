@@ -9,6 +9,9 @@ import { DuesLedgerScreen } from "@/components/screens/dues-ledger-screen";
 import { ReportsScreen } from "@/components/screens/reports-screen";
 import { AccountsScreen } from "@/components/screens/accounts-screen";
 import { MoreScreen } from "@/components/screens/more-screen";
+import { InventoryScreen } from "@/components/screens/inventory-screen";
+import { PurchaseBillScreen } from "@/components/screens/purchase-bill-screen";
+import { PendingOrdersScreen } from "@/components/screens/pending-orders-screen";
 
 function CurrentScreen() {
   const { current } = useStore();
@@ -33,6 +36,12 @@ function CurrentScreen() {
       return <AccountsScreen />;
     case "more":
       return <MoreScreen />;
+    case "inventory":
+      return <InventoryScreen />;
+    case "purchaseBill":
+      return <PurchaseBillScreen />;
+    case "pendingOrders":
+      return <PendingOrdersScreen />;
     default:
       return <HomeScreen />;
   }

@@ -1,9 +1,9 @@
-import { ReceiptText, CheckCircle2, ArrowUpRight, ChevronRight } from "lucide-react";
+import { ReceiptText, CheckCircle2, ArrowUpRight, ChevronRight, Package, Truck } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 
 export function AccountsScreen() {
-  const { transactions, totalOutstanding, navigate } = useStore();
+  const { transactions, totalOutstanding, navigate, pendingOrders } = useStore();
 
   const collectedToday = transactions
     .filter((t) => t.type === "collection")
@@ -50,6 +50,35 @@ export function AccountsScreen() {
           </div>
           <ChevronRight className="size-5 text-warning" />
         </button>
+
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("inventory")}
+            className="flex items-center gap-3 rounded-2xl bg-card p-3 text-left shadow-sm ring-1 ring-black/5"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-brand-soft text-primary">
+              <Package className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Stock & Inventory</p>
+              <p className="text-xs text-muted-foreground">Godown levels</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("pendingOrders")}
+            className="flex items-center gap-3 rounded-2xl bg-card p-3 text-left shadow-sm ring-1 ring-black/5"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-warning-soft text-warning">
+              <Truck className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Pending Orders</p>
+              <p className="text-xs text-muted-foreground">{pendingOrders.length} to deliver</p>
+            </div>
+          </button>
+        </div>
 
         <h2 className="mb-3 mt-6 text-lg font-bold text-foreground">Transaction History</h2>
         <div className="space-y-3">
