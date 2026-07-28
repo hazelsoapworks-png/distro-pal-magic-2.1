@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Truck, CheckCircle2, Clock } from "lucide-react";
 import { useStore, formatINR, type OrderStatus } from "@/lib/store";
+
 import { AppHeader } from "@/components/app-header";
 
 type TabKey = "pending" | "dispatched" | "delivered";
@@ -18,7 +19,8 @@ const STATUS_META: Record<OrderStatus, { label: string; cls: string; icon: React
 };
 
 export function PendingOrdersScreen() {
-  const { orders, markOrderStatus } = useStore();
+  const { orders, markOrderStatus, products } = useStore();
+  const nameFor = (id: string) => products.find((p) => p.id === id)?.name ?? "Item";
   const [tab, setTab] = useState<TabKey>("pending");
 
   const counts = {
@@ -71,7 +73,7 @@ export function PendingOrdersScreen() {
                 {o.lines.map((l, i) => (
                   <li key={i} className="flex items-center justify-between text-muted-foreground">
                     <span className="truncate">
-                      {l.qty}× {productName(o, l.productId)}
+                      {l.qty}× {nameFor(l.productId)}
                     </span>
                     <span className="shrink-0 font-medium text-foreground">
                       {formatINR(l.qty * l.price)}
@@ -119,7 +121,3 @@ export function PendingOrdersScreen() {
   );
 }
 
-function productName(order: { lines: { productId: string }[] }, id: string) {
-  // Placeholder; enriched at render — replaced below with a lookup
-  return id;
-}
