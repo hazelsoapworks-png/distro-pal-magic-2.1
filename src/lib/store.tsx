@@ -49,6 +49,10 @@ export type Beat = {
   salesToday: number;
 };
 
+export type ProductCategory = "Eye" | "Face" | "Lip" | "Hair" | "Nail Care";
+
+export const PRODUCT_CATEGORIES: ProductCategory[] = ["Eye", "Face", "Lip", "Hair", "Nail Care"];
+
 export type Product = {
   id: string;
   name: string;
@@ -56,6 +60,9 @@ export type Product = {
   buyingPrice: number;
   sellingPrice: number;
   unit: string;
+  imageUrl?: string;
+  category?: ProductCategory;
+  hasVariants?: boolean;
 };
 
 export type Transaction = {

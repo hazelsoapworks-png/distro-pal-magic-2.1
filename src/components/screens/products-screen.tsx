@@ -1,6 +1,12 @@
-import { useState } from "react";
-import { Package, Plus, Pencil, Trash2 } from "lucide-react";
-import { useStore, formatINR, type Product } from "@/lib/store";
+import { useRef, useState } from "react";
+import { Camera, Plus, Pencil, Trash2, X } from "lucide-react";
+import {
+  useStore,
+  formatINR,
+  PRODUCT_CATEGORIES,
+  type Product,
+  type ProductCategory,
+} from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { Modal } from "@/components/modal";
 
@@ -43,14 +49,26 @@ export function ProductsScreen() {
           return (
             <div key={p.id} className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
               <div className="flex items-start gap-3">
-                <span className="flex size-11 items-center justify-center rounded-xl bg-brand-soft text-primary">
-                  <Package className="size-5" />
-                </span>
+                <ProductThumb src={p.imageUrl} name={p.name} />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-foreground">{p.name}</p>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     Code: {p.code} • per {p.unit}
                   </p>
+                  {(p.category || p.hasVariants) && (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {p.category && (
+                        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-primary">
+                          {p.category}
+                        </span>
+                      )}
+                      {p.hasVariants && (
+                        <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning">
+                          Shades
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   <button
@@ -106,6 +124,23 @@ export function ProductsScreen() {
   );
 }
 
+function ProductThumb({ src, name }: { src?: string; name: string }) {
+  const base =
+    "flex size-[65px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-soft";
+  if (src) {
+    return (
+      <div className={base}>
+        <img src={src} alt={name} className="size-full object-cover" />
+      </div>
+    );
+  }
+  return (
+    <div className={base}>
+      <Camera className="size-6 text-primary/60" />
+    </div>
+  );
+}
+
 function ProductFormModal({
   open,
   product,
@@ -122,8 +157,11 @@ function ProductFormModal({
   const [buying, setBuying] = useState("");
   const [selling, setSelling] = useState("");
   const [unit, setUnit] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [category, setCategory] = useState<ProductCategory | "">("");
+  const [hasVariants, setHasVariants] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  // Sync fields when the modal opens for a specific product
   const [lastKey, setLastKey] = useState<string | null>(null);
   const key = open ? product?.id ?? "new" : null;
   if (key !== lastKey) {
@@ -133,7 +171,17 @@ function ProductFormModal({
     setBuying(product ? String(product.buyingPrice) : "");
     setSelling(product ? String(product.sellingPrice) : "");
     setUnit(product?.unit ?? "");
+    setImageUrl(product?.imageUrl);
+    setCategory(product?.category ?? "");
+    setHasVariants(product?.hasVariants ?? false);
   }
+
+  const onPickFile = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setImageUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const submit = () => {
     if (!name.trim()) return;
@@ -143,6 +191,9 @@ function ProductFormModal({
       buyingPrice: Number(buying) || 0,
       sellingPrice: Number(selling) || 0,
       unit: unit.trim() || "unit",
+      imageUrl,
+      category: category || undefined,
+      hasVariants,
     });
   };
 
@@ -152,11 +203,93 @@ function ProductFormModal({
         {product ? "Edit Product" : "Add Product"}
       </h3>
       <div className="mt-4 max-h-[62vh] space-y-3 overflow-y-auto pr-1">
-        <FormRow label="Product Name" value={name} onChange={setName} placeholder="e.g. Cooking Oil 1L" />
+        {/* Image upload */}
+        <div>
+          <span className="mb-1.5 block text-sm font-medium text-foreground">Product Image</span>
+          <div className="flex items-center gap-3">
+            <div className="relative flex size-20 items-center justify-center overflow-hidden rounded-xl bg-surface ring-1 ring-black/5">
+              {imageUrl ? (
+                <>
+                  <img src={imageUrl} alt="Preview" className="size-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setImageUrl(undefined)}
+                    aria-label="Remove image"
+                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/60 text-white"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </>
+              ) : (
+                <Camera className="size-6 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex flex-1 flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="rounded-xl bg-brand-soft px-3 py-2 text-sm font-semibold text-primary"
+              >
+                {imageUrl ? "Change photo" : "Upload photo"}
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => onPickFile(e.target.files?.[0])}
+              />
+            </div>
+          </div>
+        </div>
+
+        <FormRow label="Product Name" value={name} onChange={setName} placeholder="e.g. Matte Lipstick" />
         <FormRow label="Product Code" value={code} onChange={setCode} placeholder="PRD-001" />
+
+        {/* Category */}
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-foreground">Category</span>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as ProductCategory | "")}
+            className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+          >
+            <option value="">Select category</option>
+            {PRODUCT_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <FormRow label="Buying Price (₹)" value={buying} onChange={setBuying} placeholder="0" type="number" />
         <FormRow label="Selling Price (₹)" value={selling} onChange={setSelling} placeholder="0" type="number" />
         <FormRow label="Unit" value={unit} onChange={setUnit} placeholder="e.g. pack, kg, bottle" />
+
+        {/* Variants toggle */}
+        <div className="flex items-center justify-between rounded-xl bg-surface px-3.5 py-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">Shades / Variants</p>
+            <p className="text-xs text-muted-foreground">Enable for cosmetics shades or numbers</p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={hasVariants}
+            onClick={() => setHasVariants((v) => !v)}
+            className={`relative h-6 w-11 rounded-full transition-colors ${
+              hasVariants ? "bg-primary" : "bg-muted-foreground/30"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${
+                hasVariants ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
         <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
