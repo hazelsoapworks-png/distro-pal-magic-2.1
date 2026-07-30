@@ -83,8 +83,8 @@ export type Transaction = {
   time: string;
 };
 
-export type OrderLine = { productId: string; qty: number; price: number };
-export type OrderStatus = "pending" | "dispatched" | "delivered";
+export type OrderLine = { productId: string; qty: number; price: number; dispatchedQty?: number };
+export type OrderStatus = "pending" | "partial" | "dispatched" | "delivered";
 
 export type Order = {
   id: string;
@@ -97,6 +97,42 @@ export type Order = {
   status: OrderStatus;
   createdAt: string;
   deliveredAt?: string;
+  backOrderOf?: string;
+  dispatchIds?: string[];
+};
+
+export type DispatchLine = {
+  productId: string;
+  orderedQty: number;
+  dispatchedQty: number;
+  remainingQty: number;
+  price: number;
+};
+
+export type DispatchRecord = {
+  id: string;
+  orderId: string;
+  shopId: string;
+  shopName: string;
+  beatName: string;
+  executive: string;
+  vehicle: string;
+  invoiceNumber: string;
+  at: string;
+  lines: DispatchLine[];
+  subTotal: number;
+  tax: number;
+  grandTotal: number;
+  status: "Fully Dispatched" | "Partially Dispatched";
+  backOrderId?: string;
+};
+
+export const TAX_RATE = 0.18;
+
+export const DISTRIBUTOR = {
+  name: "SalesBeat Distributors Pvt. Ltd.",
+  gstin: "27AABCS1429B1ZX",
+  address: "Warehouse 12, Industrial Estate, Pune 411019",
 };
 
 export type PurchaseBillLine = { productId: string; qty: number; price: number };
