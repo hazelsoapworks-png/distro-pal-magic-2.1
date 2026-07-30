@@ -261,6 +261,10 @@ type StoreValue = {
   deleteProduct: (id: string) => void;
   placeOrder: (shopId: string, lines: OrderLine[], beatName: string) => void;
   markOrderStatus: (orderId: string, status: OrderStatus) => void;
+  confirmDispatch: (
+    orderId: string,
+    input: { executive: string; vehicle: string; quantities: Record<string, number> },
+  ) => string | undefined;
   addPurchaseBill: (bill: Omit<PurchaseBill, "id" | "createdAt" | "total">) => void;
   collectPayment: (shopId: string, amount: number, mode: string) => void;
 };
