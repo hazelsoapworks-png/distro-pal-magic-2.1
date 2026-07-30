@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
+import { ProductThumb } from "@/components/product-thumb";
 
 export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId?: string }) {
-  const { shops, beats, products, placeOrder, goBack } = useStore();
+  const { shops, beats, products, placeOrder, goBack, stockFor } = useStore();
   const shop = shops.find((s) => s.id === shopId);
   const beat = beats.find((b) => b.id === beatId);
 
