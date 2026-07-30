@@ -239,6 +239,7 @@ type StoreValue = {
   orders: Order[];
   purchaseBills: PurchaseBill[];
   stockMovements: StockMovement[];
+  dispatches: DispatchRecord[];
   syncEnabled: boolean;
 
   shopsForBeat: (beatId: string) => Shop[];
