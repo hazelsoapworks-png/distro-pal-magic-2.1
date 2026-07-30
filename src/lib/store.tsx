@@ -291,6 +291,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>(seedOrders);
   const [purchaseBills, setPurchaseBills] = useState<PurchaseBill[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [dispatches, setDispatches] = useState<DispatchRecord[]>([]);
   const [syncEnabled, setSyncEnabled] = useState(true);
 
   const value = useMemo<StoreValue>(() => {
