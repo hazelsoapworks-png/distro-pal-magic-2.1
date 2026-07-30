@@ -1,9 +1,9 @@
-import { ReceiptText, CheckCircle2, ArrowUpRight, ChevronRight, Package, Truck } from "lucide-react";
+import { ReceiptText, CheckCircle2, ArrowUpRight, ChevronRight, Package, Truck, FileText } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 
 export function AccountsScreen() {
-  const { transactions, totalOutstanding, navigate, pendingOrders } = useStore();
+  const { transactions, totalOutstanding, navigate, pendingOrders, dispatches } = useStore();
 
   const collectedToday = transactions
     .filter((t) => t.type === "collection")
@@ -76,6 +76,19 @@ export function AccountsScreen() {
             <div className="min-w-0">
               <p className="text-sm font-semibold text-foreground">Pending Orders</p>
               <p className="text-xs text-muted-foreground">{pendingOrders.length} to deliver</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("dispatchHistory")}
+            className="flex items-center gap-3 rounded-2xl bg-card p-3 text-left shadow-sm ring-1 ring-black/5"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-success-soft text-success">
+              <FileText className="size-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground">Dispatch History</p>
+              <p className="text-xs text-muted-foreground">{dispatches.length} invoices</p>
             </div>
           </button>
         </div>
