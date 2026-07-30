@@ -316,7 +316,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .filter((o) => o.status !== "delivered")
         .flatMap((o) => o.lines)
         .filter((l) => l.productId === productId)
-        .reduce((s, l) => s + l.qty, 0);
+        .reduce((s, l) => s + Math.max(0, l.qty - (l.dispatchedQty ?? 0)), 0);
       const available = Math.max(0, physical - reserved);
       const status: StockLevels["status"] =
         physical <= 0 ? "out" : available <= threshold ? "low" : "in";
