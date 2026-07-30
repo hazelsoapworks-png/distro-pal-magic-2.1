@@ -366,6 +366,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       orders,
       purchaseBills,
       stockMovements,
+      dispatches,
       syncEnabled,
 
       shopsForBeat,
