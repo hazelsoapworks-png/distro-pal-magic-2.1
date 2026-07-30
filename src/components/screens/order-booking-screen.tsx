@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
+import { ProductThumb } from "@/components/product-thumb";
 
 export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId?: string }) {
-  const { shops, beats, products, placeOrder, goBack } = useStore();
+  const { shops, beats, products, placeOrder, goBack, stockFor } = useStore();
   const shop = shops.find((s) => s.id === shopId);
   const beat = beats.find((b) => b.id === beatId);
 
@@ -41,16 +42,23 @@ export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId
       <div className="space-y-3 px-4 pt-4">
         {products.map((p) => {
           const q = qty[p.id] ?? 0;
+          const stock = stockFor(p.id);
           return (
             <div
               key={p.id}
               className="flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5"
             >
-              <div className="min-w-0">
-                <p className="font-semibold text-foreground">{p.name}</p>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                  {formatINR(p.sellingPrice)} / {p.unit} • {p.code}
-                </p>
+              <div className="flex min-w-0 items-center gap-3">
+                <ProductThumb src={p.imageUrl} name={p.name} className="size-[48px]" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground">{p.name}</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {formatINR(p.sellingPrice)} / {p.unit} • {p.code}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Available Stock: <span className="font-semibold text-foreground">{stock.available}</span>
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-1.5">
                 <button

@@ -22,7 +22,10 @@ export type ScreenName =
   | "duesLedger"
   | "inventory"
   | "purchaseBill"
-  | "pendingOrders";
+  | "pendingOrders"
+  | "dispatch"
+  | "invoice"
+  | "dispatchHistory";
 
 export type ScreenEntry = {
   name: ScreenName;
@@ -83,8 +86,8 @@ export type Transaction = {
   time: string;
 };
 
-export type OrderLine = { productId: string; qty: number; price: number };
-export type OrderStatus = "pending" | "dispatched" | "delivered";
+export type OrderLine = { productId: string; qty: number; price: number; dispatchedQty?: number };
+export type OrderStatus = "pending" | "partial" | "dispatched" | "delivered";
 
 export type Order = {
   id: string;
@@ -97,6 +100,42 @@ export type Order = {
   status: OrderStatus;
   createdAt: string;
   deliveredAt?: string;
+  backOrderOf?: string;
+  dispatchIds?: string[];
+};
+
+export type DispatchLine = {
+  productId: string;
+  orderedQty: number;
+  dispatchedQty: number;
+  remainingQty: number;
+  price: number;
+};
+
+export type DispatchRecord = {
+  id: string;
+  orderId: string;
+  shopId: string;
+  shopName: string;
+  beatName: string;
+  executive: string;
+  vehicle: string;
+  invoiceNumber: string;
+  at: string;
+  lines: DispatchLine[];
+  subTotal: number;
+  tax: number;
+  grandTotal: number;
+  status: "Fully Dispatched" | "Partially Dispatched";
+  backOrderId?: string;
+};
+
+export const TAX_RATE = 0.18;
+
+export const DISTRIBUTOR = {
+  name: "SalesBeat Distributors Pvt. Ltd.",
+  gstin: "27AABCS1429B1ZX",
+  address: "Warehouse 12, Industrial Estate, Pune 411019",
 };
 
 export type PurchaseBillLine = { productId: string; qty: number; price: number };
@@ -203,6 +242,7 @@ type StoreValue = {
   orders: Order[];
   purchaseBills: PurchaseBill[];
   stockMovements: StockMovement[];
+  dispatches: DispatchRecord[];
   syncEnabled: boolean;
 
   shopsForBeat: (beatId: string) => Shop[];
@@ -224,6 +264,10 @@ type StoreValue = {
   deleteProduct: (id: string) => void;
   placeOrder: (shopId: string, lines: OrderLine[], beatName: string) => void;
   markOrderStatus: (orderId: string, status: OrderStatus) => void;
+  confirmDispatch: (
+    orderId: string,
+    input: { executive: string; vehicle: string; quantities: Record<string, number> },
+  ) => string | undefined;
   addPurchaseBill: (bill: Omit<PurchaseBill, "id" | "createdAt" | "total">) => void;
   collectPayment: (shopId: string, amount: number, mode: string) => void;
 };
@@ -250,6 +294,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>(seedOrders);
   const [purchaseBills, setPurchaseBills] = useState<PurchaseBill[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [dispatches, setDispatches] = useState<DispatchRecord[]>([]);
   const [syncEnabled, setSyncEnabled] = useState(true);
 
   const value = useMemo<StoreValue>(() => {
@@ -274,7 +319,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .filter((o) => o.status !== "delivered")
         .flatMap((o) => o.lines)
         .filter((l) => l.productId === productId)
-        .reduce((s, l) => s + l.qty, 0);
+        .reduce((s, l) => s + Math.max(0, l.qty - (l.dispatchedQty ?? 0)), 0);
       const available = Math.max(0, physical - reserved);
       const status: StockLevels["status"] =
         physical <= 0 ? "out" : available <= threshold ? "low" : "in";
@@ -324,6 +369,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       orders,
       purchaseBills,
       stockMovements,
+      dispatches,
       syncEnabled,
 
       shopsForBeat,
@@ -403,15 +449,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           if (!target) return prev;
           if (status === "delivered" && target.status !== "delivered") {
             const at = new Date().toISOString();
-            const movements: StockMovement[] = target.lines.map((l, i) => ({
-              id: `mv-${Date.now()}-${i}`,
-              type: "outward",
-              productId: l.productId,
-              qty: l.qty,
-              note: `Delivered to ${target.shopName}`,
-              at,
-            }));
-            setStockMovements((m) => [...movements, ...m]);
+            const movements: StockMovement[] = target.lines
+              .map((l, i) => ({
+                id: `mv-${Date.now()}-${i}`,
+                type: "outward" as const,
+                productId: l.productId,
+                // dispatched quantities already left the godown at dispatch time
+                qty: Math.max(0, l.qty - (l.dispatchedQty ?? 0)),
+                note: `Delivered to ${target.shopName}`,
+                at,
+              }))
+              .filter((m) => m.qty > 0);
+            if (movements.length > 0) setStockMovements((m) => [...movements, ...m]);
             return prev.map((o) =>
               o.id === orderId ? { ...o, status: "delivered", deliveredAt: at } : o,
             );
@@ -419,6 +468,110 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return prev.map((o) => (o.id === orderId ? { ...o, status } : o));
         });
       },
+
+      confirmDispatch: (orderId, input) => {
+        const order = orders.find((o) => o.id === orderId);
+        if (!order) return undefined;
+
+        const at = new Date().toISOString();
+        const dispatchId = `dsp-${Date.now()}`;
+        const backOrderId = `ord-bo-${Date.now()}`;
+
+        const lines: DispatchLine[] = order.lines.map((l) => {
+          const already = l.dispatchedQty ?? 0;
+          const pendingQty = Math.max(0, l.qty - already);
+          const dispatchedQty = Math.max(0, Math.min(pendingQty, Math.floor(input.quantities[l.productId] ?? 0)));
+          return {
+            productId: l.productId,
+            orderedQty: pendingQty,
+            dispatchedQty,
+            remainingQty: pendingQty - dispatchedQty,
+            price: l.price,
+          };
+        });
+
+        const totalDispatched = lines.reduce((s, l) => s + l.dispatchedQty, 0);
+        if (totalDispatched <= 0) return undefined;
+
+        const remainingLines = lines.filter((l) => l.remainingQty > 0);
+        const subTotal = lines.reduce((s, l) => s + l.dispatchedQty * l.price, 0);
+        const tax = Math.round(subTotal * TAX_RATE * 100) / 100;
+        const grandTotal = subTotal + tax;
+        const fully = remainingLines.length === 0;
+
+        const record: DispatchRecord = {
+          id: dispatchId,
+          orderId,
+          shopId: order.shopId,
+          shopName: order.shopName,
+          beatName: order.beatName,
+          executive: input.executive || profile.name,
+          vehicle: input.vehicle || "—",
+          invoiceNumber: `INV-${new Date().getFullYear()}-${String(dispatches.length + 1).padStart(4, "0")}`,
+          at,
+          lines,
+          subTotal,
+          tax,
+          grandTotal,
+          status: fully ? "Fully Dispatched" : "Partially Dispatched",
+          backOrderId: fully ? undefined : backOrderId,
+        };
+        setDispatches((prev) => [record, ...prev]);
+
+        const movements: StockMovement[] = lines
+          .filter((l) => l.dispatchedQty > 0)
+          .map((l, i) => ({
+            id: `mv-${Date.now()}-${i}`,
+            type: "outward" as const,
+            productId: l.productId,
+            qty: l.dispatchedQty,
+            note: `Dispatched to ${order.shopName} • ${record.invoiceNumber}`,
+            at,
+          }));
+        setStockMovements((m) => [...movements, ...m]);
+
+        setOrders((prev) => {
+          const next = prev.map((o) => {
+            if (o.id !== orderId) return o;
+            return {
+              ...o,
+              status: (fully ? "dispatched" : "partial") as OrderStatus,
+              dispatchIds: [...(o.dispatchIds ?? []), dispatchId],
+              lines: o.lines.map((l) => {
+                const d = lines.find((x) => x.productId === l.productId);
+                return d ? { ...l, dispatchedQty: (l.dispatchedQty ?? 0) + d.dispatchedQty } : l;
+              }),
+            };
+          });
+
+          if (fully) return next;
+
+          const boLines: OrderLine[] = remainingLines.map((l) => ({
+            productId: l.productId,
+            qty: l.remainingQty,
+            price: l.price,
+          }));
+          const boSummary = boLines
+            .map((l) => `${l.qty}x ${products.find((p) => p.id === l.productId)?.name ?? "Item"}`)
+            .join(", ");
+          const backOrder: Order = {
+            id: backOrderId,
+            shopId: order.shopId,
+            shopName: order.shopName,
+            beatName: order.beatName,
+            lines: boLines,
+            total: boLines.reduce((s, l) => s + l.qty * l.price, 0),
+            summary: boSummary,
+            status: "pending",
+            createdAt: at,
+            backOrderOf: orderId,
+          };
+          return [backOrder, ...next];
+        });
+
+        return dispatchId;
+      },
+
 
       addPurchaseBill: (bill) => {
         const id = `pb-${Date.now()}`;
@@ -458,7 +611,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ]);
       },
     };
-  }, [stack, activeTab, profile, dailyTarget, beats, shops, products, transactions, orders, purchaseBills, stockMovements, syncEnabled]);
+  }, [stack, activeTab, profile, dailyTarget, beats, shops, products, transactions, orders, purchaseBills, stockMovements, dispatches, syncEnabled]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

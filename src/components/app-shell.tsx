@@ -12,6 +12,9 @@ import { MoreScreen } from "@/components/screens/more-screen";
 import { InventoryScreen } from "@/components/screens/inventory-screen";
 import { PurchaseBillScreen } from "@/components/screens/purchase-bill-screen";
 import { PendingOrdersScreen } from "@/components/screens/pending-orders-screen";
+import { DispatchScreen } from "@/components/screens/dispatch-screen";
+import { InvoiceScreen } from "@/components/screens/invoice-screen";
+import { DispatchHistoryScreen } from "@/components/screens/dispatch-history-screen";
 
 function CurrentScreen() {
   const { current } = useStore();
@@ -42,6 +45,12 @@ function CurrentScreen() {
       return <PurchaseBillScreen />;
     case "pendingOrders":
       return <PendingOrdersScreen />;
+    case "dispatch":
+      return <DispatchScreen orderId={p.orderId} />;
+    case "invoice":
+      return <InvoiceScreen dispatchId={p.dispatchId} />;
+    case "dispatchHistory":
+      return <DispatchHistoryScreen />;
     default:
       return <HomeScreen />;
   }
