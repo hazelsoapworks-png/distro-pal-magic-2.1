@@ -22,7 +22,10 @@ export type ScreenName =
   | "duesLedger"
   | "inventory"
   | "purchaseBill"
-  | "pendingOrders";
+  | "pendingOrders"
+  | "dispatch"
+  | "invoice"
+  | "dispatchHistory";
 
 export type ScreenEntry = {
   name: ScreenName;
@@ -608,7 +611,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ]);
       },
     };
-  }, [stack, activeTab, profile, dailyTarget, beats, shops, products, transactions, orders, purchaseBills, stockMovements, syncEnabled]);
+  }, [stack, activeTab, profile, dailyTarget, beats, shops, products, transactions, orders, purchaseBills, stockMovements, dispatches, syncEnabled]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
