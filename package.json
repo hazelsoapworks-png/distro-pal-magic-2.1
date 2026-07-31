@@ -7,9 +7,13 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
+    "build:mobile": "CAPACITOR_BUILD=true vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "cap:sync": "cap sync android",
+    "cap:open": "cap open android",
+    "cap:android": "npm run build:mobile && npx cap sync android && npx cap open android"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
