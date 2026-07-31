@@ -6,10 +6,31 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+const isCapacitor = process.env.CAPACITOR_BUILD === "true";
+
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // When building for Capacitor, emit a static SPA shell with index.html so
+    // Capacitor's WebView has a single entry point.
+    ...(isCapacitor && {
+      spa: {
+        enabled: true,
+        prerender: {
+          outputPath: "index.html",
+        },
+      },
+    }),
+  },
+  vite: {
+    ...(isCapacitor && {
+      build: {
+        outDir: "dist",
+        emptyOutDir: true,
+      },
+    }),
   },
 });
+
