@@ -11,8 +11,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "cap:sync": "cap sync android",
-    "cap:open": "cap open android",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
     "cap:android": "npm run build:mobile && npx cap sync android && npx cap open android"
   },
   "dependencies": {
