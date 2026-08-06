@@ -212,3 +212,21 @@
 @utility bg-teal {
   background-color: var(--color-teal);
 }
+
+/* ---------------------------- Android safe area ---------------------------
+ * Requires viewport-fit=cover (set in src/routes/__root.tsx).
+ * app-safe-top   -> clears the status bar on any Android device.
+ * app-safe-bottom-> clears the gesture / navigation bar.
+ */
+@utility app-safe-top {
+  padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
+}
+
+@utility app-safe-bottom {
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+@utility app-safe-x {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}

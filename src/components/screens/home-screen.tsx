@@ -34,7 +34,7 @@ export function HomeScreen() {
   return (
     <div className="pb-6">
       {/* Header */}
-      <header className="rounded-b-3xl bg-primary px-4 pb-6 pt-5 text-primary-foreground">
+      <header className="app-safe-top rounded-b-3xl bg-primary px-4 pb-6 text-primary-foreground">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-primary-foreground/80">Welcome back,</p>
