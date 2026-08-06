@@ -25,24 +25,37 @@ export function AppHeader({
         rounded ? "rounded-b-3xl" : ""
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         {withBack && (
           <button
             type="button"
             onClick={goBack}
             aria-label="Go back one step"
-            className="mt-0.5 -ml-1 flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/15 active:bg-white/25"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-white/15 active:bg-white/25"
           >
             <ArrowLeft className="size-6" />
           </button>
         )}
+
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold leading-tight text-balance">{title}</h1>
-          {subtitle && (
-            <p className="mt-0.5 text-sm text-primary-foreground/85">{subtitle}</p>
+          <h1 className="text-2xl font-bold leading-tight">
+            {title}
+          </h1>
+
+          {subtitle ? (
+            <p className="mt-1 text-sm text-primary-foreground/85">
+              {subtitle}
+            </p>
+          ) : (
+            <div className="mt-1 h-5" />
           )}
         </div>
-        {right}
+
+        {right && (
+          <div className="flex items-center">
+            {right}
+          </div>
+        )}
       </div>
     </header>
   );
