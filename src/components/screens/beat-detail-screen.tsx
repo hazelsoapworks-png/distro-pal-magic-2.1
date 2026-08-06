@@ -5,7 +5,7 @@ import {
   Pencil,
   Trash2,
   MapPin,
-  User,
+  
   Phone,
   Receipt,
   Banknote,
