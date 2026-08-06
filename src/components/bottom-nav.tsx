@@ -13,7 +13,7 @@ export function BottomNav() {
   const { activeTab, switchTab } = useStore();
 
   return (
-    <nav className="shrink-0 border-t border-black/5 bg-card px-2 pb-2 pt-2">
+    <nav className="app-safe-bottom shrink-0 border-t border-black/5 bg-card px-2 pt-2">
       <ul className="flex items-center justify-between">
         {TABS.map(({ id, label, icon: Icon }) => {
           const active = activeTab === id;

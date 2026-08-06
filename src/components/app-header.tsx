@@ -5,26 +5,28 @@ import type { ReactNode } from "react";
 export function AppHeader({
   title,
   subtitle,
-  showBack = false,
+  showBack,
   right,
   rounded = false,
 }: {
   title: string;
   subtitle?: string;
+  /** Defaults to "show whenever this screen was pushed onto the stack". */
   showBack?: boolean;
   right?: ReactNode;
   rounded?: boolean;
 }) {
-  const { goBack } = useStore();
+  const { goBack, canGoBack } = useStore();
+  const withBack = showBack ?? canGoBack;
 
   return (
     <header
-      className={`bg-primary text-primary-foreground px-4 pt-5 pb-6 ${
+      className={`app-safe-top bg-primary text-primary-foreground px-4 pb-6 ${
         rounded ? "rounded-b-3xl" : ""
       }`}
     >
       <div className="flex items-start gap-3">
-        {showBack && (
+        {withBack && (
           <button
             type="button"
             onClick={goBack}
