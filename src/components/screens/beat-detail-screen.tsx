@@ -189,13 +189,13 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
                 </div>
               </div>
 
-              <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="size-4 shrink-0" />
-                {shop.owner} • {shop.phone}
+              <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+                {shop.address}
               </p>
               <p className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="size-4 shrink-0 text-primary" />
-                {shop.address}
+                <Phone className="size-4 shrink-0" />
+                {shop.phone}
               </p>
 
               <div className="mt-3 rounded-xl bg-surface p-3">
