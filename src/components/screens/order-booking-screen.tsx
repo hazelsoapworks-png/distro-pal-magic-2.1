@@ -4,29 +4,55 @@ import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { ProductThumb } from "@/components/product-thumb";
 
-export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId?: string }) {
+export function OrderBookingScreen({
+  shopId,
+  beatId,
+}: {
+  shopId?: string;
+  beatId?: string;
+}) {
   const { shops, beats, products, placeOrder, goBack, stockFor } = useStore();
+
   const shop = shops.find((s) => s.id === shopId);
   const beat = beats.find((b) => b.id === beatId);
 
   const [qty, setQty] = useState<Record<string, number>>({});
 
   const setValue = (id: string, v: number) =>
-    setQty((prev) => ({ ...prev, [id]: Math.max(0, Math.min(999, v)) }));
+    setQty((prev) => ({
+      ...prev,
+      [id]: Math.max(0, Math.min(999, v)),
+    }));
+
+  const getSellingPrice = (productId: string, defaultPrice: number) => {
+    return shop?.lastSellingPrices?.[productId] ?? defaultPrice;
+  };
 
   const lines = products
-    .map((p) => ({ p, q: qty[p.id] ?? 0 }))
+    .map((p) => ({
+      p,
+      q: qty[p.id] ?? 0,
+      price: getSellingPrice(p.id, p.sellingPrice),
+    }))
     .filter((l) => l.q > 0);
-  const total = lines.reduce((s, l) => s + l.q * l.p.sellingPrice, 0);
+
+  const total = lines.reduce((s, l) => s + l.q * l.price, 0);
+
   const items = lines.reduce((s, l) => s + l.q, 0);
 
   const confirm = () => {
     if (!shop || lines.length === 0) return;
+
     placeOrder(
       shop.id,
-      lines.map((l) => ({ productId: l.p.id, qty: l.q, price: l.p.sellingPrice })),
+      lines.map((l) => ({
+        productId: l.p.id,
+        qty: l.q,
+        price: l.price,
+      })),
       beat?.name ?? "Beat",
     );
+
     goBack();
   };
 
@@ -34,7 +60,11 @@ export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId
     <div className="pb-40">
       <AppHeader
         title="Book Order"
-        subtitle={shop ? `${shop.name}${beat ? ` • ${beat.name}` : ""}` : "Order booking"}
+        subtitle={
+          shop
+            ? `${shop.name}${beat ? ` • ${beat.name}` : ""}`
+            : "Order booking"
+        }
         showBack
         rounded
       />
@@ -43,23 +73,38 @@ export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId
         {products.map((p) => {
           const q = qty[p.id] ?? 0;
           const stock = stockFor(p.id);
+          const price = getSellingPrice(p.id, p.sellingPrice);
+
           return (
             <div
               key={p.id}
               className="flex items-center justify-between gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5"
             >
               <div className="flex min-w-0 items-center gap-3">
-                <ProductThumb src={p.imageUrl} name={p.name} className="size-[48px]" />
+                <ProductThumb
+                  src={p.imageUrl}
+                  name={p.name}
+                  className="size-[48px]"
+                />
+
                 <div className="min-w-0">
-                  <p className="font-semibold text-foreground">{p.name}</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    {formatINR(p.sellingPrice)} / {p.unit} • {p.code}
+                  <p className="font-semibold text-foreground">
+                    {p.name}
                   </p>
+
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {formatINR(price)} / {p.unit} • {p.code}
+                  </p>
+
                   <p className="text-xs text-muted-foreground">
-                    Available Stock: <span className="font-semibold text-foreground">{stock.available}</span>
+                    Available Stock:{" "}
+                    <span className="font-semibold text-foreground">
+                      {stock.available}
+                    </span>
                   </p>
                 </div>
               </div>
+
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
@@ -70,13 +115,20 @@ export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId
                 >
                   <Minus className="size-4" />
                 </button>
+
                 <input
                   inputMode="numeric"
                   value={q}
-                  onChange={(e) => setValue(p.id, Number(e.target.value.replace(/\D/g, "")) || 0)}
+                  onChange={(e) =>
+                    setValue(
+                      p.id,
+                      Number(e.target.value.replace(/\D/g, "")) || 0,
+                    )
+                  }
                   aria-label={`${p.name} quantity`}
                   className="h-9 w-12 rounded-lg bg-surface text-center text-base font-semibold text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
                 />
+
                 <button
                   type="button"
                   onClick={() => setValue(p.id, q + 1)}
@@ -91,13 +143,18 @@ export function OrderBookingScreen({ shopId, beatId }: { shopId?: string; beatId
         })}
       </div>
 
-      {/* Order summary bar */}
       <div className="fixed inset-x-0 bottom-[4.5rem] z-30 mx-auto max-w-md px-4">
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-card p-3 shadow-lg ring-1 ring-black/5">
           <div>
-            <p className="text-xs text-muted-foreground">{items} items</p>
-            <p className="text-lg font-bold text-foreground">{formatINR(total)}</p>
+            <p className="text-xs text-muted-foreground">
+              {items} items
+            </p>
+
+            <p className="text-lg font-bold text-foreground">
+              {formatINR(total)}
+            </p>
           </div>
+
           <button
             type="button"
             onClick={confirm}
