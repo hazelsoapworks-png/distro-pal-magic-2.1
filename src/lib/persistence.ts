@@ -1,16 +1,15 @@
 /**
- * DPAS local persistence layer.
+ * DPAS Persistence Layer
  *
- * Goals:
- *  - Offline-first: everything lives in the device's localStorage.
- *  - Seed/demo data is written ONLY on first install.
- *  - User data is NEVER overwritten by demo data on later launches.
- *  - Schema changes are handled by explicit, ordered migrations so that
- *    future app updates preserve existing user data.
+ * Purpose:
+ * - Offline first storage
+ * - User data must never be overwritten by demo data
+ * - First install only seed data is saved
+ * - Future backup/cloud sync ready
  */
 
 export const STORAGE_KEY = "dpas.state";
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 type Data = Record<string, unknown>;
 
@@ -20,15 +19,14 @@ type Envelope = {
   data: Data;
 };
 
-/**
- * Ordered migrations. Key = the version the migration upgrades TO.
- * Each migration receives the previous data shape and returns the new one.
- * Never delete a migration — older installs may still be on an old version.
- */
 const migrations: Record<number, (data: Data) => Data> = {
-  // v1 -> v2: profile gained editable phone + address fields.
+  /**
+   * v1 -> v2
+   * Profile fields added
+   */
   2: (data) => {
     const profile = (data.profile as Data | undefined) ?? {};
+
     return {
       ...data,
       profile: {
@@ -38,22 +36,54 @@ const migrations: Record<number, (data: Data) => Data> = {
       },
     };
   },
+
+  /**
+   * v2 -> v3
+   * Future-proof storage marker
+   */
+  3: (data) => {
+    return {
+      ...data,
+    };
+  },
 };
 
 function isBrowser() {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+  return (
+    typeof window !== "undefined" &&
+    typeof window.localStorage !== "undefined"
+  );
 }
 
 function readEnvelope(): Envelope | null {
   if (!isBrowser()) return null;
+
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
+
     if (!raw) return null;
+
     const parsed = JSON.parse(raw) as Partial<Envelope>;
-    if (!parsed || typeof parsed !== "object" || typeof parsed.data !== "object") return null;
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      typeof parsed.data !== "object"
+    ) {
+      return null;
+    }
+
     return {
-      version: typeof parsed.version === "number" ? parsed.version : 1,
-      savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : new Date().toISOString(),
+      version:
+        typeof parsed.version === "number"
+          ? parsed.version
+          : 1,
+
+      savedAt:
+        typeof parsed.savedAt === "string"
+          ? parsed.savedAt
+          : new Date().toISOString(),
+
       data: (parsed.data ?? {}) as Data,
     };
   } catch {
@@ -63,82 +93,179 @@ function readEnvelope(): Envelope | null {
 
 function runMigrations(envelope: Envelope): Data {
   let data = envelope.data;
-  for (let v = envelope.version + 1; v <= SCHEMA_VERSION; v++) {
-    const migrate = migrations[v];
-    if (migrate) data = migrate(data);
+
+  for (
+    let version = envelope.version + 1;
+    version <= SCHEMA_VERSION;
+    version++
+  ) {
+    const migration = migrations[version];
+
+    if (migration) {
+      data = migration(data);
+    }
   }
+
   return data;
 }
 
-/** True once the app has been installed and state written at least once. */
+
+/**
+ * Check if DPAS already has saved data.
+ */
 export function hasPersistedState() {
   return readEnvelope() !== null;
 }
 
+
 /**
- * Load persisted state, merged over the provided defaults.
+ * Load state.
  *
- * - First install (nothing stored): defaults (which contain seed data) are
- *   returned and immediately written, so the seed becomes the user's baseline.
- * - Later launches: every key that exists in storage wins over the default,
- *   so demo data can never clobber real user data. Keys added by a newer app
- *   version fall back to their default value.
+ * First install:
+ * - Save default data
+ *
+ * Later:
+ * - Stored user data wins
+ * - New app fields get default values
  */
 export function loadState<T extends Data>(defaults: T): T {
-  if (!isBrowser()) return defaults;
 
-  const envelope = readEnvelope();
-  if (!envelope) {
-    saveState(defaults);
+  if (!isBrowser()) {
     return defaults;
   }
 
-  const migrated = runMigrations(envelope);
-  const merged = { ...defaults } as Data;
 
-  for (const key of Object.keys(defaults)) {
-    const stored = migrated[key];
-    if (stored === undefined || stored === null) continue;
-    // Shallow-merge plain objects so newly added sub-fields keep their default.
-    const def = (defaults as Data)[key];
-    if (
-      typeof stored === "object" &&
-      !Array.isArray(stored) &&
-      typeof def === "object" &&
-      def !== null &&
-      !Array.isArray(def)
-    ) {
-      merged[key] = { ...(def as Data), ...(stored as Data) };
-    } else {
-      merged[key] = stored;
-    }
+  const envelope = readEnvelope();
+
+
+  /**
+   * Fresh installation
+   */
+  if (!envelope) {
+
+    saveState(defaults);
+
+    return defaults;
   }
 
-  if (envelope.version !== SCHEMA_VERSION) saveState(merged);
+
+  const migrated = runMigrations(envelope);
+
+
+  const merged: Data = {
+    ...defaults,
+  };
+
+
+  Object.keys(defaults).forEach((key) => {
+
+    const storedValue = migrated[key];
+
+
+    if (
+      storedValue === undefined ||
+      storedValue === null
+    ) {
+      return;
+    }
+
+
+    const defaultValue = defaults[key];
+
+
+    /**
+     * Merge objects,
+     * keep new fields from latest version.
+     */
+    if (
+      typeof storedValue === "object" &&
+      !Array.isArray(storedValue) &&
+      typeof defaultValue === "object" &&
+      defaultValue !== null &&
+      !Array.isArray(defaultValue)
+    ) {
+
+      merged[key] = {
+        ...(defaultValue as Data),
+        ...(storedValue as Data),
+      };
+
+    } else {
+
+      merged[key] = storedValue;
+
+    }
+
+  });
+
+
+  /**
+   * Save migrated state.
+   */
+  if (envelope.version !== SCHEMA_VERSION) {
+    saveState(merged);
+  }
+
+
   return merged as T;
 }
 
-/** Persist the full application state. Safe to call on every change. */
+
+/**
+ * Save complete DPAS state.
+ */
 export function saveState(data: Data) {
+
   if (!isBrowser()) return;
+
+
   try {
+
     const envelope: Envelope = {
+
       version: SCHEMA_VERSION,
-      savedAt: new Date().toISOString(),
+
+      savedAt:
+        new Date().toISOString(),
+
       data,
+
     };
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
+
+
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(envelope)
+    );
+
+
   } catch {
-    // Storage full / disabled — keep the app usable rather than crashing.
+
+    /**
+     * Storage error should never crash app.
+     */
+
   }
+
 }
 
-/** Wipe local data (factory reset). Seed data reloads on next launch. */
+
+/**
+ * Remove DPAS local data.
+ */
 export function clearState() {
+
   if (!isBrowser()) return;
+
+
   try {
-    window.localStorage.removeItem(STORAGE_KEY);
+
+    window.localStorage.removeItem(
+      STORAGE_KEY
+    );
+
   } catch {
-    /* ignore */
+
   }
+
 }
