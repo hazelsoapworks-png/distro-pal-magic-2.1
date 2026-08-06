@@ -25,7 +25,7 @@ export function BeatScreen() {
 
   return (
     <div className="relative pb-24">
-      <header className="rounded-b-3xl bg-primary px-4 pb-5 pt-5 text-primary-foreground">
+      <header className="app-safe-top rounded-b-3xl bg-primary px-4 pb-5 text-primary-foreground">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold">Beat Management</h1>

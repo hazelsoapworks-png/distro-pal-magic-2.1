@@ -1,10 +1,14 @@
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { loadState, saveState } from "@/lib/persistence";
 
 /* ---------------------------------- Types --------------------------------- */
 
@@ -165,7 +169,26 @@ export type StockLevels = {
   status: "in" | "low" | "out";
 };
 
+export type Profile = {
+  name: string;
+  role: string;
+  zone: string;
+  online: boolean;
+  phone: string;
+  address: string;
+};
+
 /* -------------------------------- Seed data ------------------------------- */
+/* Written to local storage ONLY on first install (see lib/persistence.ts).    */
+
+const seedProfile: Profile = {
+  name: "Rahul Sharma",
+  role: "Senior Sales Executive",
+  zone: "North Zone - Beat Sector 4",
+  online: true,
+  phone: "+91 98200 45678",
+  address: "Flat 402, Shanti Residency, Pune 411001",
+};
 
 const seedBeats: Beat[] = [
   { id: "rambagh", name: "Rambagh", area: "Central District - Zone A", location: "Central District", salesToday: 4500 },
@@ -218,9 +241,26 @@ const seedOrders: Order[] = [
     total: 4500,
     summary: "10x Cooking Oil 1L, 5x Tea 500g, 2x Wheat Flour 10kg",
     status: "pending",
-    createdAt: new Date().toISOString(),
+    createdAt: "2026-01-01T04:45:00.000Z",
   },
 ];
+
+/** Baseline written on first install only. */
+function buildDefaults() {
+  return {
+    profile: seedProfile,
+    dailyTarget: 60000,
+    beats: seedBeats,
+    shops: seedShops,
+    products: seedProducts,
+    transactions: seedTransactions,
+    orders: seedOrders,
+    purchaseBills: [] as PurchaseBill[],
+    stockMovements: [] as StockMovement[],
+    dispatches: [] as DispatchRecord[],
+    syncEnabled: true,
+  };
+}
 
 /* ------------------------------ Context shape ----------------------------- */
 
@@ -229,10 +269,11 @@ type StoreValue = {
   current: ScreenEntry;
   canGoBack: boolean;
   navigate: (name: ScreenName, params?: Record<string, string>) => void;
-  goBack: () => void;
+  goBack: () => boolean;
   switchTab: (tab: TabId) => void;
 
-  profile: { name: string; role: string; zone: string; online: boolean };
+  hydrated: boolean;
+  profile: Profile;
   dailyTarget: number;
   achievedToday: number;
   beats: Beat[];
@@ -255,6 +296,7 @@ type StoreValue = {
 
   setSyncEnabled: (v: boolean) => void;
   setDailyTarget: (v: number) => void;
+  updateProfile: (patch: Partial<Pick<Profile, "name" | "phone" | "address">>) => void;
   addBeat: (name: string, area: string) => void;
   renameBeat: (beatId: string, name: string) => void;
   addShop: (beatId: string, shop: Omit<Shop, "id" | "beatId" | "status">) => void;
@@ -280,22 +322,104 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [stack, setStack] = useState<ScreenEntry[]>([{ name: "home" }]);
   const [activeTab, setActiveTab] = useState<TabId>("home");
 
-  const [profile] = useState({
-    name: "Rahul Sharma",
-    role: "Senior Sales Executive",
-    zone: "North Zone - Beat Sector 4",
-    online: true,
-  });
-  const [dailyTarget, setDailyTarget] = useState(60000);
-  const [beats, setBeats] = useState<Beat[]>(seedBeats);
-  const [shops, setShops] = useState<Shop[]>(seedShops);
-  const [products, setProducts] = useState<Product[]>(seedProducts);
-  const [transactions, setTransactions] = useState<Transaction[]>(seedTransactions);
-  const [orders, setOrders] = useState<Order[]>(seedOrders);
-  const [purchaseBills, setPurchaseBills] = useState<PurchaseBill[]>([]);
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
-  const [dispatches, setDispatches] = useState<DispatchRecord[]>([]);
-  const [syncEnabled, setSyncEnabled] = useState(true);
+  const initial = useRef(buildDefaults()).current;
+
+  const [hydrated, setHydrated] = useState(false);
+  const [profile, setProfile] = useState<Profile>(initial.profile);
+  const [dailyTarget, setDailyTarget] = useState(initial.dailyTarget);
+  const [beats, setBeats] = useState<Beat[]>(initial.beats);
+  const [shops, setShops] = useState<Shop[]>(initial.shops);
+  const [products, setProducts] = useState<Product[]>(initial.products);
+  const [transactions, setTransactions] = useState<Transaction[]>(initial.transactions);
+  const [orders, setOrders] = useState<Order[]>(initial.orders);
+  const [purchaseBills, setPurchaseBills] = useState<PurchaseBill[]>(initial.purchaseBills);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(initial.stockMovements);
+  const [dispatches, setDispatches] = useState<DispatchRecord[]>(initial.dispatches);
+  const [syncEnabled, setSyncEnabled] = useState(initial.syncEnabled);
+
+  /* ---- Hydrate from device storage once, after mount (SSR-safe) ---- */
+  useEffect(() => {
+    const s = loadState(buildDefaults());
+    setProfile(s.profile);
+    setDailyTarget(s.dailyTarget);
+    setBeats(s.beats);
+    setShops(s.shops);
+    setProducts(s.products);
+    setTransactions(s.transactions);
+    setOrders(s.orders);
+    setPurchaseBills(s.purchaseBills);
+    setStockMovements(s.stockMovements);
+    setDispatches(s.dispatches);
+    setSyncEnabled(s.syncEnabled);
+    setHydrated(true);
+  }, []);
+
+  /* ---- Persist every change (never before hydration, so demo data
+          can't overwrite what the user already has stored) ---- */
+  useEffect(() => {
+    if (!hydrated) return;
+    saveState({
+      profile,
+      dailyTarget,
+      beats,
+      shops,
+      products,
+      transactions,
+      orders,
+      purchaseBills,
+      stockMovements,
+      dispatches,
+      syncEnabled,
+    });
+  }, [
+    hydrated,
+    profile,
+    dailyTarget,
+    beats,
+    shops,
+    products,
+    transactions,
+    orders,
+    purchaseBills,
+    stockMovements,
+    dispatches,
+    syncEnabled,
+  ]);
+
+  /* ------------------------------ Navigation ------------------------------ */
+
+  const navigate = useCallback<StoreValue["navigate"]>((name, params) => {
+    setStack((prev) => {
+      const top = prev[prev.length - 1];
+      if (top.name === name && JSON.stringify(top.params ?? {}) === JSON.stringify(params ?? {})) {
+        return prev;
+      }
+      if (TAB_SCREENS.includes(name as TabId)) {
+        setActiveTab(name as TabId);
+        return [{ name, params }];
+      }
+      return [...prev, { name, params }];
+    });
+  }, []);
+
+  /** Returns true when a screen was popped, false when already at the root. */
+  const goBack = useCallback<StoreValue["goBack"]>(() => {
+    let popped = false;
+    setStack((prev) => {
+      if (prev.length <= 1) return prev;
+      popped = true;
+      const next = prev.slice(0, -1);
+      const top = next[next.length - 1];
+      if (TAB_SCREENS.includes(top.name as TabId)) setActiveTab(top.name as TabId);
+      return next;
+    });
+    return popped || stack.length > 1;
+  }, [stack.length]);
+
+  const switchTab = useCallback<StoreValue["switchTab"]>((tab) => {
+    setActiveTab(tab);
+    setStack([{ name: tab }]);
+  }, []);
 
   const value = useMemo<StoreValue>(() => {
     const shopsForBeat = (beatId: string) => shops.filter((s) => s.beatId === beatId);
@@ -328,26 +452,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     const pendingOrders = orders.filter((o) => o.status !== "delivered");
 
-    const navigate: StoreValue["navigate"] = (name, params) => {
-      setStack((prev) => [...prev, { name, params }]);
-      if (TAB_SCREENS.includes(name as TabId)) setActiveTab(name as TabId);
-    };
-
-    const goBack: StoreValue["goBack"] = () => {
-      setStack((prev) => {
-        if (prev.length <= 1) return prev;
-        const next = prev.slice(0, -1);
-        const top = next[next.length - 1];
-        if (TAB_SCREENS.includes(top.name as TabId)) setActiveTab(top.name as TabId);
-        return next;
-      });
-    };
-
-    const switchTab: StoreValue["switchTab"] = (tab) => {
-      setActiveTab(tab);
-      setStack([{ name: tab }]);
-    };
-
     const nowTime = () =>
       new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
@@ -359,6 +463,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       goBack,
       switchTab,
 
+      hydrated,
       profile,
       dailyTarget,
       achievedToday,
@@ -381,6 +486,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       setSyncEnabled,
       setDailyTarget,
+      updateProfile: (patch) => setProfile((prev) => ({ ...prev, ...patch })),
       addBeat: (name, area) =>
         setBeats((prev) => [
           ...prev,
@@ -572,7 +678,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return dispatchId;
       },
 
-
       addPurchaseBill: (bill) => {
         const id = `pb-${Date.now()}`;
         const createdAt = new Date().toISOString();
@@ -611,7 +716,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ]);
       },
     };
-  }, [stack, activeTab, profile, dailyTarget, beats, shops, products, transactions, orders, purchaseBills, stockMovements, dispatches, syncEnabled]);
+  }, [
+    stack,
+    activeTab,
+    navigate,
+    goBack,
+    switchTab,
+    hydrated,
+    profile,
+    dailyTarget,
+    beats,
+    shops,
+    products,
+    transactions,
+    orders,
+    purchaseBills,
+    stockMovements,
+    dispatches,
+    syncEnabled,
+  ]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

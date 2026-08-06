@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { StoreProvider, useStore } from "@/lib/store";
 import { BottomNav } from "@/components/bottom-nav";
 import { HomeScreen } from "@/components/screens/home-screen";
@@ -56,7 +57,53 @@ function CurrentScreen() {
   }
 }
 
+/**
+ * Android hardware-back support.
+ *
+ * The in-app navigation stack is mirrored into the browser/WebView history so
+ * the device back button pops one screen at a time:
+ *   Details -> Shop -> Beat -> Home -> (exit app)
+ * When the stack is already at the root we do NOT block the event, so the
+ * WebView unwinds its own history and Android closes the app.
+ */
+function useAndroidBackButton() {
+  const { canGoBack, goBack } = useStore();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Keep exactly one "trap" entry on top of history while a sub-screen is open.
+    if (canGoBack && window.history.state?.dpas !== true) {
+      window.history.pushState({ dpas: true }, "");
+    }
+
+    const onPop = () => {
+      const popped = goBack();
+      if (popped) {
+        // Re-arm the trap for the next back press if we're still nested.
+        window.history.pushState({ dpas: true }, "");
+      }
+    };
+
+    // Cordova/Capacitor WebViews also emit a `backbutton` DOM event.
+    const onHardwareBack = (e: Event) => {
+      if (!canGoBack) return;
+      e.preventDefault();
+      goBack();
+    };
+
+    window.addEventListener("popstate", onPop);
+    document.addEventListener("backbutton", onHardwareBack);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      document.removeEventListener("backbutton", onHardwareBack);
+    };
+  }, [canGoBack, goBack]);
+}
+
 function Shell() {
+  useAndroidBackButton();
+
   return (
     <div className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-surface">
       <div className="flex-1 overflow-y-auto overscroll-contain">
