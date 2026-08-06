@@ -507,16 +507,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setProducts((prev) => prev.map((x) => (x.id === p.id ? p : x))),
       deleteProduct: (id) => setProducts((prev) => prev.filter((p) => p.id !== id)),
 
-      placeOrder: (shopId, lines, beatName) => {
+            placeOrder: (shopId, lines, beatName) => {
         const shop = shops.find((s) => s.id === shopId);
         if (!shop || lines.length === 0) return;
+
         const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
+
         const summary = lines
           .map((l) => {
             const p = products.find((x) => x.id === l.productId);
             return `${l.qty}x ${p?.name ?? "Item"}`;
           })
           .join(", ");
+
         const order: Order = {
           id: `ord-${Date.now()}`,
           shopId,
@@ -528,12 +531,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           status: "pending",
           createdAt: new Date().toISOString(),
         };
+
         setOrders((prev) => [order, ...prev]);
+
+        const updatedPrices: Record<string, number> = {
+          ...(shop.lastSellingPrices ?? {}),
+        };
+
+        lines.forEach((line) => {
+          updatedPrices[line.productId] = line.price;
+        });
+
         setShops((prev) =>
           prev.map((s) =>
-            s.id === shopId ? { ...s, status: "ordered", orderAmount: total } : s,
+            s.id === shopId
+              ? {
+                  ...s,
+                  status: "ordered",
+                  orderAmount: total,
+                  lastSellingPrices: updatedPrices,
+                }
+              : s,
           ),
         );
+
         setTransactions((prev) => [
           {
             id: `tx-${Date.now()}`,
@@ -545,11 +566,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           },
           ...prev,
         ]);
+
         setBeats((prev) =>
-          prev.map((b) => (b.name === beatName ? { ...b, salesToday: b.salesToday + total } : b)),
+          prev.map((b) =>
+            b.name === beatName
+              ? { ...b, salesToday: b.salesToday + total }
+              : b,
+          ),
         );
       },
-
       markOrderStatus: (orderId, status) => {
         setOrders((prev) => {
           const target = prev.find((o) => o.id === orderId);
