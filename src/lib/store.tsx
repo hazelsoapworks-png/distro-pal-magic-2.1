@@ -49,6 +49,7 @@ export type Shop = {
   status: ShopStatus;
   orderAmount?: number;
   paidAmount?: number;
+  lastSellingPrices?: Record<string, number>;
 };
 
 export type Beat = {
