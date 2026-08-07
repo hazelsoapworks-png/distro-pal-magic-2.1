@@ -14,7 +14,16 @@ import { useStore, formatINR } from "@/lib/store";
 import { Modal } from "@/components/modal";
 
 export function BeatScreen() {
-  const { beats, shopsForBeat, duesForBeat, navigate, addBeat, renameBeat } = useStore();
+  const {
+  beats,
+  shopsForBeat,
+  duesForBeat,
+  navigate,
+  goBack,
+  addBeat,
+  renameBeat,
+  deleteBeat,
+} = useStore();
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editBeat, setEditBeat] = useState<{ id: string; name: string } | null>(null);
