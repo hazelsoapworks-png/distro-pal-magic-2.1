@@ -5,6 +5,8 @@ import {
   Map,
   MapPin,
   Pencil,
+  Trash2,
+  ArrowLeft,
   ChevronRight,
   Store,
 } from "lucide-react";
