@@ -188,6 +188,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setStockMovements(state.stockMovements);
     setDispatches(state.dispatches);
     setSyncEnabled(state.syncEnabled);
+    setGoogleEmail(state.googleEmail ?? "");
     setHydrated(true);
   }, []);
 
@@ -206,6 +207,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stockMovements,
       dispatches,
       syncEnabled,
+      googleEmail
     });
   }, [
     hydrated,
@@ -220,6 +222,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     stockMovements,
     dispatches,
     syncEnabled,
+    googleEmail
   ]);
 
   const navigate = useCallback<StoreValue["navigate"]>((name, params) => {
@@ -508,6 +511,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     stockMovements,
     switchTab,
     syncEnabled,
+    googleEmail,
     transactions,
   ]);
 
