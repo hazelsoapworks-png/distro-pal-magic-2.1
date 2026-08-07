@@ -34,7 +34,11 @@ export function AccountsScreen() {
   <div className="flex items-start gap-3">
     <button
       type="button"
-      onClick={goBack}
+      onClick={() => {
+  if (!goBack()) {
+    navigate("home");
+  }
+}}
       className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
     >
       <ArrowLeft className="size-5" />
