@@ -311,7 +311,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       renameBeat: (beatId, name) => {
         setBeats((previous) => renameBeat(previous, beatId, name));
       },
+     
+      deleteBeat: (beatId) => {
+        setBeats((previous) => deleteBeat(previous, beatId));
 
+        setShops((previous) =>
+          previous.filter((shop) => shop.beatId !== beatId),
+        );
+      },
+   
       addShop: (beatId, shop) => {
         setShops((previous) => [
           ...previous,
