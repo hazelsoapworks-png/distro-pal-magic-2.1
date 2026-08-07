@@ -29,6 +29,7 @@ export function MoreScreen() {
   const [targetOpen, setTargetOpen] = useState(false);
   const [targetValue, setTargetValue] = useState(String(dailyTarget));
   const [profileOpen, setProfileOpen] = useState(false);
+  const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
@@ -130,17 +131,11 @@ const googleSubtitle = useMemo(() => {
         <div className="space-y-3">
         
           <ToolRow
-  icon={<Mail className="size-5" />}
-  title="Google Account"
-  subtitle={googleSubtitle}
-  onClick={() => {
-    if (googleConnected) {
-      setGoogleEmail("");
-    } else {
-      setGoogleEmail("manish@gmail.com");
-    }
-  }}
-/>
+            icon={<Mail className="size-5" />}
+            title="Google Account"
+            subtitle={googleSubtitle}
+            onClick={() => setGoogleDialogOpen(true)}
+         />
 
           <ToolRow
             icon={<FolderOpen className="size-5" />}
@@ -248,6 +243,46 @@ const googleSubtitle = useMemo(() => {
           </button>
         </div>
       </Modal>
+      <Modal
+  open={googleDialogOpen}
+  onClose={() => setGoogleDialogOpen(false)}
+>
+ <h3 className="text-xl font-bold text-foreground">
+  {googleConnected ? "Google Account" : "Google Sign In"}
+</h3>
+
+  <p className="mt-2 text-sm text-muted-foreground">
+  {googleConnected
+    ? `Connected as ${googleEmail}`
+    : "Continue with your Google Account."}
+</p>
+
+  <div className="mt-6 flex justify-end gap-3">
+    <button
+  type="button"
+  onClick={() => setGoogleDialogOpen(false)}
+  className="px-4 py-2 font-semibold text-muted-foreground"
+>
+  {googleConnected ? "Close" : "Cancel"}
+</button>
+
+   <button
+  type="button"
+  onClick={() => {
+    if (googleConnected) {
+      setGoogleEmail("");
+    } else {
+      setGoogleEmail("manish@gmail.com");
+    }
+
+    setGoogleDialogOpen(false);
+  }}
+  className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
+>
+  {googleConnected ? "Sign Out" : "Sign in with Google"}
+</button>
+  </div>
+</Modal>
     </div>
   );
 }
