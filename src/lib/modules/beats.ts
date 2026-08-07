@@ -16,8 +16,20 @@ export function renameBeat(
   name: string,
 ): Beat[] {
   return beats.map((beat) =>
-    beat.id === beatId ? { ...beat, name } : beat,
+    beat.id === beatId
+      ? {
+          ...beat,
+          name,
+        }
+      : beat,
   );
+}
+
+export function deleteBeat(
+  beats: Beat[],
+  beatId: string,
+): Beat[] {
+  return beats.filter((beat) => beat.id !== beatId);
 }
 
 export function addBeatSales(
@@ -27,7 +39,10 @@ export function addBeatSales(
 ): Beat[] {
   return beats.map((beat) =>
     beat.name === beatName
-      ? { ...beat, salesToday: beat.salesToday + amount }
+      ? {
+          ...beat,
+          salesToday: beat.salesToday + amount,
+        }
       : beat,
   );
 }
