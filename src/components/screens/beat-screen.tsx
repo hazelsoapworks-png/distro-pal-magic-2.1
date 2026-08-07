@@ -94,16 +94,27 @@ export function BeatScreen() {
                     {b.area}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setEditBeat({ id: b.id, name: b.name })}
-                  aria-label={`Edit ${b.name}`}
-                  className="text-muted-foreground transition-colors hover:text-primary"
-                >
-                  <Pencil className="size-5" />
-                </button>
-              </div>
+              
+                <div className="flex items-center gap-2">
+  <button
+    type="button"
+    onClick={() => setEditBeat({ id: b.id, name: b.name })}
+    aria-label={`Edit ${b.name}`}
+    className="text-muted-foreground transition-colors hover:text-primary"
+  >
+    <Pencil className="size-5" />
+  </button>
 
+  <button
+    type="button"
+    onClick={() => setDeleteBeatItem(b)}
+    aria-label={`Delete ${b.name}`}
+    className="text-red-500 transition-colors hover:text-red-700"
+  >
+    <Trash2 className="size-5" />
+  </button>
+ </div>
+</div>
               <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-surface px-3 py-3 text-center">
                 <Metric label="Total Outlets" value={`${shops.length} Shops`} />
                 <Metric label="Pending Visit" value={`${pending} Pending`} accent="text-primary" />
