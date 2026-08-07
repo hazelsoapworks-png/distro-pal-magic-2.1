@@ -11,6 +11,7 @@ import {
   Store,
 } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
+import type { Beat } from "@/lib/types";
 import { Modal } from "@/components/modal";
 
 export function BeatScreen() {
@@ -27,6 +28,7 @@ export function BeatScreen() {
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editBeat, setEditBeat] = useState<{ id: string; name: string } | null>(null);
+  const [deleteBeatItem, setDeleteBeatItem] = useState<Beat | null>(null);
 
   const filtered = beats.filter(
     (b) =>
@@ -38,12 +40,22 @@ export function BeatScreen() {
     <div className="relative pb-24">
       <header className="app-safe-top rounded-b-3xl bg-primary px-4 pb-5 text-primary-foreground">
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Beat Management</h1>
-            <p className="mt-0.5 text-sm text-primary-foreground/85">
-              {beats.length} Active Beats Listed
-            </p>
-          </div>
+         <div className="flex items-start gap-3">
+  <button
+    type="button"
+    onClick={goBack}
+    className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
+  >
+    <ArrowLeft className="size-5" />
+  </button>
+
+  <div>
+    <h1 className="text-2xl font-bold">Beat Management</h1>
+    <p className="mt-0.5 text-sm text-primary-foreground/85">
+      {beats.length} Active Beats Listed
+    </p>
+  </div>
+</div>
           <button
             type="button"
             onClick={() => setAddOpen(true)}
@@ -121,17 +133,6 @@ export function BeatScreen() {
           <p className="py-10 text-center text-muted-foreground">No beats match your search.</p>
         )}
       </div>
-
-      {/* FAB */}
-      <button
-        type="button"
-        onClick={() => setAddOpen(true)}
-        aria-label="Add new beat"
-        style={{ transform: "translateX(calc(min(14rem, 50vw) - 4rem))" }}
-        className="fixed bottom-24 left-1/2 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
-      >
-        <Plus className="size-7" />
-      </button>
 
       <AddBeatModal open={addOpen} onClose={() => setAddOpen(false)} onAdd={addBeat} />
       <EditBeatModal
