@@ -123,7 +123,7 @@ export function MoreScreen() {
           <ToolRow
             icon={<Mail className="size-5" />}
             title="Google Account"
-            subtitle="Not Connected"
+            subtitle="Tap to Sign in with Google"
             onClick={() => {}}
          />
 
