@@ -30,7 +30,24 @@ export function AccountsScreen() {
 
   return (
     <div className="pb-6">
-      <AppHeader title="Accounts" subtitle="Collections & order activity" rounded />
+      <header className="app-safe-top rounded-b-3xl bg-primary px-4 pb-5 text-primary-foreground">
+  <div className="flex items-start gap-3">
+    <button
+      type="button"
+      onClick={goBack}
+      className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
+    >
+      <ArrowLeft className="size-5" />
+    </button>
+
+    <div>
+      <h1 className="text-2xl font-bold">Accounts</h1>
+      <p className="mt-0.5 text-sm text-primary-foreground/85">
+        Collections & order activity
+      </p>
+    </div>
+  </div>
+</header>
 
       <div className="px-4 pt-4">
         <div className="grid grid-cols-2 gap-3">
