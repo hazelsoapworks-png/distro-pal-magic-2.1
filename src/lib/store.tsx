@@ -93,6 +93,9 @@ type StoreValue = {
   stockMovements: StockMovement[];
   dispatches: DispatchRecord[];
   syncEnabled: boolean;
+  
+  googleEmail: string;
+  setGoogleEmail: (email: string) => void;
 
   shopsForBeat: (beatId: string) => Shop[];
   duesForBeat: (beatId: string) => number;
@@ -168,6 +171,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     initial.dispatches,
   );
   const [syncEnabled, setSyncEnabled] = useState(initial.syncEnabled);
+
+  const [googleEmail, setGoogleEmail] = useState("");
 
   useEffect(() => {
     const state = loadState(buildDefaults());
@@ -284,6 +289,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stockMovements,
       dispatches,
       syncEnabled,
+      googleEmail,
+      setGoogleEmail,
 
       shopsForBeat: (beatId) => shopsForBeat(shops, beatId),
       duesForBeat: (beatId) => duesForBeat(shops, beatId),
