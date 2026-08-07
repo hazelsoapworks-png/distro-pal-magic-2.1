@@ -153,8 +153,44 @@ export function BeatScreen() {
           renameBeat(id, name);
           setEditBeat(null);
         }}
-      />
-    </div>
+      /> 
+
+<Modal
+  open={!!deleteBeatItem}
+  onClose={() => setDeleteBeatItem(null)}
+>
+  <h3 className="text-xl font-bold text-foreground">
+    Delete Beat
+  </h3>
+
+  <p className="mt-3 text-sm text-muted-foreground">
+    Are you sure you want to delete this beat?
+  </p>
+
+  <div className="mt-6 flex justify-end gap-3">
+    <button
+      type="button"
+      onClick={() => setDeleteBeatItem(null)}
+      className="px-4 py-2 font-semibold text-muted-foreground"
+    >
+      No
+    </button>
+
+    <button
+      type="button"
+      onClick={() => {
+        if (deleteBeatItem) {
+          deleteBeat(deleteBeatItem.id);
+        }
+        setDeleteBeatItem(null);
+      }}
+      className="rounded-full bg-red-600 px-5 py-2 font-semibold text-white"
+    >
+      Yes
+    </button>
+  </div>
+</Modal>
+ </div>
   );
 }
 
