@@ -107,6 +107,7 @@ type StoreValue = {
   updateProfile: (patch: Partial<EditableProfileFields>) => void;
   addBeat: (name: string, area: string) => void;
   renameBeat: (beatId: string, name: string) => void;
+  deleteBeat: (beatId: string) => void;
   addShop: (beatId: string, shop: NewShop) => void;
   deleteShop: (shopId: string) => void;
   addProduct: (product: NewProduct) => void;
