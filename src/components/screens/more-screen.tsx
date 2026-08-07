@@ -17,26 +17,28 @@ import { Modal } from "@/components/modal";
 
 export function MoreScreen() {
   const {
-    profile,
-    updateProfile,
-    syncEnabled,
-    setSyncEnabled,
-    dailyTarget,
-    setDailyTarget,
-  } = useStore();
+  profile,
+  updateProfile,
+  syncEnabled,
+  setSyncEnabled,
+  googleEmail,
+  setGoogleEmail,
+  dailyTarget,
+  setDailyTarget,
+} = useStore();
   const [targetOpen, setTargetOpen] = useState(false);
   const [targetValue, setTargetValue] = useState(String(dailyTarget));
   const [profileOpen, setProfileOpen] = useState(false);
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
-  const googleConnected = false;
+  const googleConnected = googleEmail.trim().length > 0;
 
 const googleSubtitle = useMemo(() => {
   return googleConnected
-    ? "satish@gmail.com"
+    ? googleEmail
     : "Tap to Sign in with Google";
-}, [googleConnected]);
+}, [googleConnected, googleEmail]);
 
   const openProfile = () => {
     setName(profile.name);
@@ -128,11 +130,17 @@ const googleSubtitle = useMemo(() => {
         <div className="space-y-3">
         
           <ToolRow
-            icon={<Mail className="size-5" />}
-            title="Google Account"
-            subtitle={googleSubtitle}
-            onClick={() => {}}
-         />
+  icon={<Mail className="size-5" />}
+  title="Google Account"
+  subtitle={googleSubtitle}
+  onClick={() => {
+    if (googleConnected) {
+      setGoogleEmail("");
+    } else {
+      setGoogleEmail("manish@gmail.com");
+    }
+  }}
+/>
 
           <ToolRow
             icon={<FolderOpen className="size-5" />}
