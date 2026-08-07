@@ -15,6 +15,7 @@ import {
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { Modal } from "@/components/modal";
+import { signInWithGoogle, signOutGoogle } from "@/lib/google";
 
 export function MoreScreen() {
   const {
@@ -291,15 +292,23 @@ const googleSubtitle = useMemo(() => {
 
   <button
   type="button"
-  onClick={() => {
-    if (googleConnected) {
-      setGoogleEmail("");
-    } else {
-      setGoogleEmail("manish@gmail.com");
-    }
+  onClick={async () => {
+  if (googleConnected) {
+    await signOutGoogle();
 
-    setGoogleDialogOpen(false);
-  }}
+    setGoogleEmail("");
+  } else {
+    const result = await signInWithGoogle();
+
+    if (result.success) {
+      setGoogleEmail(result.email);
+    } else {
+      console.log("Google Sign In Failed");
+    }
+  }
+
+  setGoogleDialogOpen(false);
+}}
   className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
 >
   <span className="flex items-center gap-2">
