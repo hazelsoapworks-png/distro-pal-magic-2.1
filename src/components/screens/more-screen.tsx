@@ -9,18 +9,6 @@ import {
   Phone,
   MapPin,
 } from "lucide-react";
-import {
-  UserRound,
-  RefreshCcw,
-  SlidersHorizontal,
-  Printer,
-  DatabaseBackup,
-  LifeBuoy,
-  ChevronRight,
-  Pencil,
-  Phone,
-  MapPin,
-} from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { Modal } from "@/components/modal";
