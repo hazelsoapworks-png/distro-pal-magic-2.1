@@ -119,6 +119,21 @@ export function MoreScreen() {
 
         <h2 className="mb-3 mt-6 text-lg font-bold text-foreground">Configuration & Tools</h2>
         <div className="space-y-3">
+        
+          <ToolRow
+            icon={<Mail className="size-5" />}
+            title="Google Account"
+            subtitle="Not Connected"
+            onClick={() => {}}
+         />
+
+          <ToolRow
+            icon={<FolderOpen className="size-5" />}
+            title="Open DPAS Folder"
+            subtitle="Open File Manager"
+            onClick={() => {}}
+         />
+          
           <ToolRow
             icon={<SlidersHorizontal className="size-5" />}
             title="Target Settings"
@@ -127,25 +142,6 @@ export function MoreScreen() {
               setTargetValue(String(dailyTarget));
               setTargetOpen(true);
             }}
-          />
-          {/* Placeholders — functionality intentionally not implemented yet. */}
-          <ToolRow
-            icon={<Printer className="size-5" />}
-            title="Bluetooth Receipt Printer"
-            subtitle="Coming soon"
-            placeholder
-          />
-          <ToolRow
-            icon={<DatabaseBackup className="size-5" />}
-            title="Offline Sync"
-            subtitle="Coming soon"
-            placeholder
-          />
-          <ToolRow
-            icon={<LifeBuoy className="size-5" />}
-            title="Help & Support"
-            subtitle="Coming soon"
-            placeholder
           />
         </div>
       </div>
