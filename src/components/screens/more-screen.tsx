@@ -1,4 +1,14 @@
-import { useState } from "react";
+import {
+  UserRound,
+  RefreshCcw,
+  SlidersHorizontal,
+  FolderOpen,
+  Mail,
+  ChevronRight,
+  Pencil,
+  Phone,
+  MapPin,
+} from "lucide-react";
 import {
   UserRound,
   RefreshCcw,
@@ -119,6 +129,23 @@ export function MoreScreen() {
 
         <h2 className="mb-3 mt-6 text-lg font-bold text-foreground">Configuration & Tools</h2>
         <div className="space-y-3">
+         <ToolRow
+  icon={<Mail className="size-5" />}
+  title="Google Account"
+  subtitle="Not Connected"
+  onClick={() => {
+    // Step 2
+  }}
+/>
+
+<ToolRow
+  icon={<FolderOpen className="size-5" />}
+  title="Open DPAS Folder"
+  subtitle="Open File Manager"
+  onClick={() => {
+    // Step 4
+  }}
+/>
           <ToolRow
             icon={<SlidersHorizontal className="size-5" />}
             title="Target Settings"
@@ -129,24 +156,6 @@ export function MoreScreen() {
             }}
           />
           {/* Placeholders — functionality intentionally not implemented yet. */}
-          <ToolRow
-            icon={<Printer className="size-5" />}
-            title="Bluetooth Receipt Printer"
-            subtitle="Coming soon"
-            placeholder
-          />
-          <ToolRow
-            icon={<DatabaseBackup className="size-5" />}
-            title="Offline Sync"
-            subtitle="Coming soon"
-            placeholder
-          />
-          <ToolRow
-            icon={<LifeBuoy className="size-5" />}
-            title="Help & Support"
-            subtitle="Coming soon"
-            placeholder
-          />
         </div>
       </div>
 
