@@ -1,9 +1,25 @@
-import { ReceiptText, CheckCircle2, ArrowUpRight, ChevronRight, Package, Truck, FileText } from "lucide-react";
+import {
+  ReceiptText,
+  CheckCircle2,
+  ArrowUpRight,
+  ChevronRight,
+  Package,
+  Truck,
+  FileText,
+  ArrowLeft,
+} from "lucide-react";                                                         
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 
 export function AccountsScreen() {
-  const { transactions, totalOutstanding, navigate, pendingOrders, dispatches } = useStore();
+  const {
+  transactions,
+  totalOutstanding,
+  navigate,
+  pendingOrders,
+  dispatches,
+  goBack,
+} = useStore();
 
   const collectedToday = transactions
     .filter((t) => t.type === "collection")
