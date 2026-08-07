@@ -9,8 +9,9 @@ import {
   Pencil,
   Phone,
   MapPin,
+  LogOut,
+  Chrome,
 } from "lucide-react";
-
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { Modal } from "@/components/modal";
@@ -251,11 +252,33 @@ const googleSubtitle = useMemo(() => {
   {googleConnected ? "Google Account" : "Google Sign In"}
 </h3>
 
-  <p className="mt-2 text-sm text-muted-foreground">
-  {googleConnected
-    ? `Connected as ${googleEmail}`
-    : "Continue with your Google Account."}
-</p>
+ <div className="mt-4 rounded-xl border border-black/10 bg-surface p-4">
+  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    Status
+  </p>
+
+  {googleConnected ? (
+    <>
+      <p className="mt-2 font-semibold text-green-600">
+        Connected
+      </p>
+
+      <p className="mt-1 text-sm text-foreground break-all">
+        {googleEmail}
+      </p>
+    </>
+  ) : (
+    <>
+      <p className="mt-2 font-semibold text-amber-600">
+        Not Connected
+      </p>
+
+      <p className="mt-1 text-sm text-muted-foreground">
+        Continue with your Google Account.
+      </p>
+    </>
+  )}
+</div>
 
   <div className="mt-6 flex justify-end gap-3">
     <button
@@ -266,7 +289,7 @@ const googleSubtitle = useMemo(() => {
   {googleConnected ? "Close" : "Cancel"}
 </button>
 
-   <button
+  <button
   type="button"
   onClick={() => {
     if (googleConnected) {
@@ -279,7 +302,15 @@ const googleSubtitle = useMemo(() => {
   }}
   className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
 >
+  <span className="flex items-center gap-2">
+  {googleConnected ? (
+    <LogOut className="size-4" />
+  ) : (
+    <Chrome className="size-4" />
+  )}
+
   {googleConnected ? "Sign Out" : "Sign in with Google"}
+</span>
 </button>
   </div>
 </Modal>
