@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   UserRound,
   RefreshCcw,
@@ -30,6 +30,13 @@ export function MoreScreen() {
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
+  const googleConnected = false;
+
+const googleSubtitle = useMemo(() => {
+  return googleConnected
+    ? "satish@gmail.com"
+    : "Tap to Sign in with Google";
+}, [googleConnected]);
 
   const openProfile = () => {
     setName(profile.name);
@@ -123,7 +130,7 @@ export function MoreScreen() {
           <ToolRow
             icon={<Mail className="size-5" />}
             title="Google Account"
-            subtitle="Tap to Sign in with Google"
+            subtitle={googleSubtitle}
             onClick={() => {}}
          />
 
