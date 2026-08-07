@@ -17,7 +17,12 @@ import {
   navigateStack,
 } from "@/lib/navigation";
 import { updateProfile, type EditableProfileFields } from "@/lib/modules/profile";
-import { addBeatSales, createBeat, renameBeat } from "@/lib/modules/beats";
+import {
+  addBeatSales,
+  createBeat,
+  renameBeat,
+  deleteBeat,
+} from "@/lib/modules/beats";
 import {
   applyCollectionToShop,
   applyOrderToShop,
