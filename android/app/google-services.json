@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1047309993394",
+    "project_id": "dpas-1ec1b",
+    "storage_bucket": "dpas-1ec1b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1047309993394:android:a7f6e609cf10728a27d0ab",
+        "android_client_info": {
+          "package_name": "com.salesbeat.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDLgxLUiKcDVnVMQoTB1lrBOHQ0mqSBHuc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
