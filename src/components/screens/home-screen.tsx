@@ -1,12 +1,13 @@
+import { useState } from "react";
 import {
   Map,
   Package,
   ReceiptText,
   TrendingUp,
-  Wallet,
   ChevronRight,
   ArrowUpRight,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 
@@ -25,9 +26,23 @@ export function HomeScreen() {
     shopsForBeat,
   } = useStore();
 
-  const collectionsToday = transactions
+  // 1. Timeframe Filter के लिए State
+  const [timeframe, setTimeframe] = useState("Today");
+  const timeframes = ["Today", "Yesterday", "This Month", "This Year"];
+
+  const baseCollections = transactions
     .filter((t) => t.type === "collection")
     .reduce((s, t) => s + t.amount, 0);
+
+  // 2. पुराने डेटा का अनुभव देने के लिए डमी लॉजिक (Prototype के लिए)
+  let timeframeMultiplier = 1;
+  if (timeframe === "Yesterday") timeframeMultiplier = 0.85;
+  if (timeframe === "This Month") timeframeMultiplier = 22.5;
+  if (timeframe === "This Year") timeframeMultiplier = 250;
+
+  const displaySales = achievedToday * timeframeMultiplier;
+  const displayCollections = baseCollections * timeframeMultiplier;
+
   const pct = Math.min(100, Math.round((achievedToday / dailyTarget) * 100));
   const activeBeats = beats.filter((b) => shopsForBeat(b.id).length > 0);
 
@@ -65,21 +80,42 @@ export function HomeScreen() {
       </header>
 
       <div className="px-4">
-        {/* Summary cards */}
-        <div className="-mt-4 grid grid-cols-2 gap-3">
+        {/* Business Overview Header & Filter */}
+        <div className="mb-4 mt-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-foreground">Overview</h2>
+          <div className="relative">
+            <select
+              value={timeframe}
+              onChange={(e) => setTimeframe(e.target.value)}
+              className="appearance-none rounded-xl bg-white px-3 py-1.5 pr-8 text-sm font-bold text-primary shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              {timeframes.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-primary" />
+          </div>
+        </div>
+
+        {/* Summary cards - Now Clickable */}
+        <div className="grid grid-cols-2 gap-3">
           <SummaryCard
-            label="Sales Today"
-            value={formatINR(achievedToday)}
+            label={`Sales ${timeframe === "Today" || timeframe === "Yesterday" ? timeframe : ""}`}
+            value={formatINR(displaySales)}
             hint="Orders booked"
             icon={<TrendingUp className="size-5 text-primary" />}
             tint="bg-brand-soft"
+            onClick={() => navigate("reports")}
           />
           <SummaryCard
-            label="Collections Today"
-            value={formatINR(collectionsToday)}
+            label={`Collections ${timeframe === "Today" || timeframe === "Yesterday" ? timeframe : ""}`}
+            value={formatINR(displayCollections)}
             hint="Payments received"
             icon={<CheckCircle2 className="size-5 text-success" />}
             tint="bg-success-soft"
+            onClick={() => navigate("reports")}
           />
           <SummaryCard
             label="Outstanding Dues"
@@ -87,6 +123,7 @@ export function HomeScreen() {
             hint={`${totalShops} shops total`}
             icon={<ReceiptText className="size-5 text-warning" />}
             tint="bg-warning-soft"
+            onClick={() => navigate("duesLedger")}
           />
           <SummaryCard
             label="Total Beats"
@@ -94,6 +131,7 @@ export function HomeScreen() {
             hint="Active field areas"
             icon={<Map className="size-5 text-teal" />}
             tint="bg-brand-soft"
+            onClick={() => switchTab("beat")}
           />
         </div>
 
@@ -137,7 +175,7 @@ export function HomeScreen() {
               key={b.id}
               type="button"
               onClick={() => navigate("beatDetail", { beatId: b.id })}
-              className="w-56 shrink-0 rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-black/5"
+              className="w-56 shrink-0 rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-black/5 transition-transform active:scale-95"
             >
               <div className="flex items-center justify-between">
                 <span className="font-bold text-primary">{b.name}</span>
@@ -162,7 +200,7 @@ export function HomeScreen() {
 
         {/* Recent transactions */}
         <h2 className="mb-3 mt-6 text-lg font-bold text-foreground">
-          Recent Transactions Today
+          Recent Transactions
         </h2>
         <div className="space-y-3">
           {transactions.map((t) => (
@@ -205,30 +243,37 @@ export function HomeScreen() {
   );
 }
 
+// 3. SummaryCard को <div> से बदलकर <button> कर दिया गया है
 function SummaryCard({
   label,
   value,
   hint,
   icon,
   tint,
+  onClick,
 }: {
   label: string;
   value: string;
   hint: string;
   icon: React.ReactNode;
   tint: string;
+  onClick: () => void;
 }) {
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 transition-transform hover:shadow-md active:scale-95"
+    >
       <div className="flex items-start justify-between">
         <span className="text-sm font-medium text-muted-foreground">{label}</span>
-        <span className={`flex size-8 items-center justify-center rounded-full ${tint}`}>
+        <span className={`flex size-8 shrink-0 items-center justify-center rounded-full ${tint}`}>
           {icon}
         </span>
       </div>
-      <p className="mt-2 text-lg font-bold leading-tight text-foreground">{value}</p>
+      <p className="mt-2 text-lg font-bold leading-tight text-foreground truncate">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-    </div>
+    </button>
   );
 }
 
@@ -247,7 +292,7 @@ function QuickAction({
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-2 rounded-2xl px-2 py-4 shadow-sm transition-transform active:scale-95 ${className}`}
+      className={`flex flex-col items-center justify-center gap-2 rounded-2xl px-2 py-4 shadow-sm transition-transform hover:opacity-90 active:scale-95 ${className}`}
     >
       {icon}
       <span className="text-center text-sm font-semibold leading-tight">{label}</span>
