@@ -20,9 +20,21 @@ export function createOrder(
     return undefined;
   }
 
-  const total = lines.reduce((sum, line) => sum + line.qty * line.price, 0);
+  let total = 0;
+  let totalMargin = 0;
 
-  const summary = lines
+  const enrichedLines = lines.map((line) => {
+    const product = products.find(p => p.id === line.productId);
+    const buyingPrice = line.buyingPrice ?? product?.buyingPrice ?? 0;
+    const marginPerItem = line.price - buyingPrice;
+
+    total += line.qty * line.price;
+    totalMargin += line.qty * marginPerItem;
+
+    return { ...line, buyingPrice };
+  });
+
+  const summary = enrichedLines
     .map((line) => `${line.qty}x ${productName(products, line.productId)}`)
     .join(", ");
 
@@ -31,8 +43,9 @@ export function createOrder(
     shopId: shop.id,
     shopName: shop.name,
     beatName,
-    lines,
+    lines: enrichedLines,
     total,
+    totalMargin,
     summary,
     status: "pending",
     createdAt,
