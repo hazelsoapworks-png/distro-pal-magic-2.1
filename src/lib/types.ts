@@ -89,7 +89,8 @@ export type OrderLineStatus = "pending" | "delivered" | "cancelled" | "backorder
 export type OrderLine = {
   productId: string;
   qty: number;
-  price: number;
+  price: number; // Selling Price
+  buyingPrice?: number; // Margin track karne ke liye
   dispatchedQty?: number;
   status?: OrderLineStatus;
 };
@@ -103,6 +104,7 @@ export type Order = {
   beatName: string;
   lines: OrderLine[];
   total: number;
+  totalMargin?: number; // Is order par total profit
   summary: string;
   status: OrderStatus;
   createdAt: string;
@@ -199,4 +201,3 @@ export type PersistedState = {
   dispatches: DispatchRecord[];
   syncEnabled: boolean;
 };
-
