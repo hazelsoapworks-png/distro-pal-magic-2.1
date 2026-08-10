@@ -110,7 +110,14 @@ export function PendingOrdersScreen() {
               <div className="mt-3 flex items-center justify-between gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Order Total</p>
-                  <p className="text-lg font-bold text-primary">{formatINR(o.total)}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg font-bold text-primary">{formatINR(o.total)}</p>
+                    {o.totalMargin !== undefined && (
+                      <span className="rounded-md bg-success-soft px-1.5 py-0.5 text-xs font-bold text-success">
+                        Profit: {formatINR(o.totalMargin)}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {(o.status === "pending" || o.status === "partial") && (
                   <button
