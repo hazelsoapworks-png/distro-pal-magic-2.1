@@ -12,6 +12,7 @@ import {
   LogOut,
   Chrome,
 } from "lucide-react";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { Modal } from "@/components/modal";
@@ -34,8 +35,20 @@ export function MoreScreen() {
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
-  const [address, setAddress] = useState(profile.address);
+    const [address, setAddress] = useState(profile.address);
   const googleConnected = googleEmail.trim().length > 0;
+
+  const openDpasFolder = async () => {
+    try {
+      const stats = await Filesystem.stat({
+        path: "SalesBeat/data.json",
+        directory: Directory.Documents,
+      });
+      alert(`Folder Found! File size: ${stats.size} bytes. Location: Documents/SalesBeat/data.json`);
+    } catch (e) {
+      alert("No data file found yet. Please perform some action to save data first.");
+    }
+  };
 
 const googleSubtitle = useMemo(() => {
   return googleConnected
@@ -139,11 +152,11 @@ const googleSubtitle = useMemo(() => {
             onClick={() => setGoogleDialogOpen(true)}
          />
 
-          <ToolRow
+                    <ToolRow
             icon={<FolderOpen className="size-5" />}
             title="Open DPAS Folder"
-            subtitle="Open File Manager"
-            onClick={() => {}}
+            subtitle="Check local backup status"
+            onClick={openDpasFolder}
          />
           
           <ToolRow

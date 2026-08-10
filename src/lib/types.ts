@@ -84,14 +84,17 @@ export type Transaction = {
   time: string;
 };
 
+export type OrderLineStatus = "pending" | "delivered" | "cancelled" | "backordered";
+
 export type OrderLine = {
   productId: string;
   qty: number;
   price: number;
   dispatchedQty?: number;
+  status?: OrderLineStatus;
 };
 
-export type OrderStatus = "pending" | "partial" | "dispatched" | "delivered";
+export type OrderStatus = "pending" | "partial" | "dispatched" | "delivered" | "cancelled";
 
 export type Order = {
   id: string;
@@ -196,3 +199,4 @@ export type PersistedState = {
   dispatches: DispatchRecord[];
   syncEnabled: boolean;
 };
+

@@ -18,7 +18,9 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
 
   const [qty, setQty] = useState<Record<string, number>>({});
   const [executive, setExecutive] = useState(profile.name);
-  const [vehicle, setVehicle] = useState("");
+    const [vehicle, setVehicle] = useState("");
+  const [showActionModal, setShowActionModal] = useState(false);
+  const [remainingAction, setRemainingAction] = useState<"cancel" | "backorder">("backorder");
 
   if (!order) {
     return (
@@ -49,13 +51,28 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
 
   const fully = totals.remaining === 0 && totals.dispatched > 0;
 
-  const submit = () => {
+    const submit = () => {
     if (totals.dispatched === 0) return;
+    if (totals.remaining > 0) {
+      setShowActionModal(true);
+    } else {
+      performDispatch();
+    }
+  };
+
+  const performDispatch = () => {
     const quantities: Record<string, number> = {};
     pendingLines.forEach((l) => {
       quantities[l.productId] = dispatchQtyOf(l);
     });
-    const dispatchId = confirmDispatch(order.id, { executive, vehicle, quantities });
+    
+    const dispatchId = confirmDispatch(order.id, { 
+      executive, 
+      vehicle, 
+      quantities,
+      remainingAction: totals.remaining > 0 ? remainingAction : undefined 
+    });
+    
     if (dispatchId) navigate("invoice", { dispatchId });
     else goBack();
   };
@@ -172,14 +189,51 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
                 ? "Enter dispatch quantities to continue"
                 : fully
                   ? "Status: Fully Dispatched"
-                  : "Status: Partially Dispatched • back order will be created"}
+                  : `Status: Partially Dispatched • back order action: ${remainingAction}`}
             </p>
           </div>
         </div>
       )}
+
+      {/* Action Modal for Partial Fulfillment */}
+      <Modal open={showActionModal} onClose={() => setShowActionModal(false)}>
+        <h3 className="text-xl font-bold">Remaining Items Action</h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          You have {totals.remaining} items remaining. What should we do with them?
+        </p>
+        <div className="mt-4 space-y-3">
+          <label className="flex items-center gap-3 p-3 border rounded-xl cursor-pointer">
+            <input type="radio" checked={remainingAction === 'backorder'} onChange={() => setRemainingAction('backorder')} />
+            <div>
+              <p className="font-semibold text-foreground">Create Backorder</p>
+              <p className="text-xs text-muted-foreground">Customer will take these later.</p>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 p-3 border rounded-xl cursor-pointer">
+            <input type="radio" checked={remainingAction === 'cancel'} onChange={() => setRemainingAction('cancel')} />
+            <div>
+              <p className="font-semibold text-foreground">Cancel Remaining</p>
+              <p className="text-xs text-muted-foreground">Remove these from the order.</p>
+            </div>
+          </label>
+        </div>
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={() => setShowActionModal(false)} className="px-4 py-2 font-semibold text-muted-foreground">Cancel</button>
+          <button 
+            onClick={() => {
+              setShowActionModal(false);
+              performDispatch();
+            }} 
+            className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
+          >
+            Confirm Dispatch
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
+
 
 function Summary({ label, value, tone = "text-foreground" }: { label: string; value: number; tone?: string }) {
   return (

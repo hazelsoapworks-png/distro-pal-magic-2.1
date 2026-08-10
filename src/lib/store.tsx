@@ -426,9 +426,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         if (!order) return undefined;
 
+        const quantities = input.quantities;
+        const remainingAction = input.remainingAction;
+
+        // Process dispatch
         const result = createDispatch(
           order,
-          input,
+          { ...input, quantities },
           profile,
           products,
           dispatches,
@@ -437,25 +441,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         if (!result) return undefined;
 
-        const updatedOrder = result.orders.find(
-          (item) => item.id === orderId,
-        );
-        const backOrder = result.orders.find(
-          (item) => item.id !== orderId,
-        );
+        // Handle remaining items
+        const remainingLines = order.lines.map(l => ({
+          ...l,
+          pendingQty: Math.max(0, l.qty - (quantities[l.productId] || 0))
+        })).filter(l => l.pendingQty > 0);
 
-        setOrders((previous) => [
-          ...(backOrder ? [backOrder] : []),
-          ...previous.map((item) =>
-            item.id === orderId ? updatedOrder ?? item : item,
-          ),
-        ]);
+        if (remainingLines.length > 0) {
+        if (remainingAction === "backorder") {
+            const backOrder = {
+              ...order,
+              id: createId("ord"),
+              lines: remainingLines.map(l => ({ productId: l.productId, qty: l.pendingQty, price: l.price })),
+              total: remainingLines.reduce((sum, l) => sum + (l.pendingQty * l.price), 0),
+              status: "pending" as OrderStatus,
+              createdAt: new Date().toISOString(),
+              backOrderOf: orderId
+    };
+            setOrders((prev) => [backOrder, ...prev]);
+          } else if (remainingAction === "cancel") {
+            // Update original order lines to show cancellation
+            setOrders((prev) => prev.map(o => o.id === orderId ? {
+              ...o,
+              lines: o.lines.map(l => ({
+                ...l,
+                status: (quantities[l.productId] || 0) < l.qty ? "cancelled" : "delivered"
+              }))
+            } : o));
+          }
+        }
 
         setDispatches((previous) => [result.dispatch, ...previous]);
         setStockMovements((previous) => [
           ...result.stockMovements,
           ...previous,
-        ]);
+  ]);
 
         return result.dispatchId;
       },
@@ -464,7 +484,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const result = createPurchaseBill(
           bill,
           new Date().toISOString(),
-        );
+  );
 
         setPurchaseBills((previous) => [
           result.purchaseBill,
@@ -538,3 +558,4 @@ export function formatINR(amount: number): string {
     maximumFractionDigits: 2,
   })}`;
 }
+

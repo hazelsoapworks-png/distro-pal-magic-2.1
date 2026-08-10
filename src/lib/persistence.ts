@@ -1,3 +1,6 @@
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
+import { Capacitor } from "@capacitor/core";
+
 /**
  * DPAS offline persistence layer.
  *
@@ -7,8 +10,11 @@
 
 export const STORAGE_KEY = "dpas.state";
 export const SCHEMA_VERSION = 3;
+const FOLDER_NAME = "SalesBeat";
+const FILE_NAME = "data.json";
 
 type Data = Record<string, unknown>;
+
 
 type Envelope = {
   version: number;
@@ -148,7 +154,7 @@ export function loadState<T extends Data>(defaults: T): T {
   return merged as T;
 }
 
-export function saveState(data: Data): void {
+export async function saveState(data: Data): Promise<void> {
   if (!isBrowser()) {
     return;
   }
@@ -161,10 +167,35 @@ export function saveState(data: Data): void {
     };
 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
+
+    // Mobile specific: Save to local drive
+    if (Capacitor.isNativePlatform()) {
+      try {
+        // Create folder if not exists
+        await Filesystem.mkdir({
+          path: FOLDER_NAME,
+          directory: Directory.Documents,
+          recursive: true,
+        }).catch(() => {
+          /* Folder might already exist */
+        });
+
+        // Write file
+        await Filesystem.writeFile({
+          path: `${FOLDER_NAME}/${FILE_NAME}`,
+          data: JSON.stringify(envelope, null, 2),
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+        });
+      } catch (err) {
+        console.error("Failed to save to local drive:", err);
+      }
+    }
   } catch {
     // Storage quota या device error की वजह से app crash नहीं होगी।
   }
 }
+
 
 export function clearState(): void {
   if (!isBrowser()) {
