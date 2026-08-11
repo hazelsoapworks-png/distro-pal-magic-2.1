@@ -82,7 +82,11 @@ export function ProductsScreen() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => deleteProduct(p.id)}
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to delete this product?")) {
+                        deleteProduct(p.id);
+                      }
+                    }}
                     aria-label={`Delete ${p.name}`}
                     className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-destructive"
                   >
