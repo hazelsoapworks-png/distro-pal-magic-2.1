@@ -152,7 +152,7 @@ export function createDispatch(
                 )}`,
             )
             .join(", "),
-          status: "pending",
+          status: "pending" as OrderStatus,
           createdAt,
           backOrderOf: order.id,
         },

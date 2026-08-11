@@ -200,4 +200,5 @@ export type PersistedState = {
   stockMovements: StockMovement[];
   dispatches: DispatchRecord[];
   syncEnabled: boolean;
+  googleEmail?: string;
 };
