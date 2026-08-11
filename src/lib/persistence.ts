@@ -39,6 +39,29 @@ const migrations: Record<number, (data: Data) => Data> = {
   3: (data) => ({
     ...data,
   }),
+
+  // v4: पुराना किराना demo catalogue हटाकर असली cosmetics price list लगाई गई।
+  // User के खुद जोड़े हुए products safe रहते हैं।
+  4: (data) => {
+    const products = Array.isArray(data.products)
+      ? (data.products as Array<Record<string, unknown>>)
+      : [];
+
+    const isDemoGrocery =
+      products.length > 0 &&
+      products.every(
+        (product) =>
+          typeof product.code === "string" && product.code.startsWith("PRD-00"),
+      );
+
+    if (!isDemoGrocery) {
+      return data;
+    }
+
+    const { products: _old, ...rest } = data;
+
+    return rest;
+  },
 };
 
 function isBrowser(): boolean {
