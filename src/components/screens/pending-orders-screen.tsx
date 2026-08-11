@@ -22,6 +22,11 @@ const STATUS_META: Record<OrderStatus, { label: string; cls: string; icon: React
   },
   dispatched: { label: "Out for Delivery", cls: "bg-brand-soft text-primary", icon: <Truck className="size-3.5" /> },
   delivered: { label: "Delivered", cls: "bg-success-soft text-success", icon: <CheckCircle2 className="size-3.5" /> },
+  cancelled: {
+    label: "Cancelled",
+    cls: "bg-muted text-muted-foreground",
+    icon: <Clock className="size-3.5" />,
+  },
 };
 
 export function PendingOrdersScreen() {

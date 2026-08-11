@@ -3,6 +3,7 @@ import { PackageCheck, Boxes } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { ProductThumb } from "@/components/product-thumb";
+import { Modal } from "@/components/modal";
 
 export function DispatchScreen({ orderId }: { orderId?: string }) {
   const { orders, products, stockFor, profile, confirmDispatch, navigate, goBack } = useStore();

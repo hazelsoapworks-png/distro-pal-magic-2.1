@@ -14,6 +14,7 @@ export type DispatchInput = {
   executive: string;
   vehicle: string;
   quantities: Record<string, number>;
+  remainingAction?: "cancel" | "backorder";
 };
 
 export type DispatchResult = {
