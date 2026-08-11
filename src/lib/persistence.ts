@@ -9,7 +9,7 @@ import { Capacitor } from "@capacitor/core";
  */
 
 export const STORAGE_KEY = "dpas.state";
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 const FOLDER_NAME = "SalesBeat";
 const FILE_NAME = "data.json";
 
