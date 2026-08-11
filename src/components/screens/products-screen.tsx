@@ -15,6 +15,7 @@ export function ProductsScreen() {
   const { products, addProduct, updateProduct, deleteProduct } = useStore();
   const [editing, setEditing] = useState<Product | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const openAdd = () => {
     setEditing(null);
@@ -82,11 +83,7 @@ export function ProductsScreen() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (window.confirm("Are you sure you want to delete this product?")) {
-                        deleteProduct(p.id);
-                      }
-                    }}
+                    onClick={() => setProductToDelete(p)}
                     aria-label={`Delete ${p.name}`}
                     className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-destructive"
                   >
@@ -125,6 +122,35 @@ export function ProductsScreen() {
           setFormOpen(false);
         }}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal open={productToDelete !== null} onClose={() => setProductToDelete(null)}>
+        <h3 className="text-xl font-bold text-foreground">Delete Product</h3>
+        <p className="mt-2 text-muted-foreground">
+          Are you sure you want to delete <span className="font-semibold text-foreground">{productToDelete?.name}</span>?
+        </p>
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setProductToDelete(null)}
+            className="px-4 py-2 font-semibold text-muted-foreground"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (productToDelete) {
+                deleteProduct(productToDelete.id);
+                setProductToDelete(null);
+              }
+            }}
+            className="rounded-full bg-red-500 px-6 py-2.5 font-semibold text-white"
+          >
+            Delete
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
