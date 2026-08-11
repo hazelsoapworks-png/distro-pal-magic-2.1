@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Truck, CheckCircle2, Clock, PackageCheck, FileText } from "lucide-react";
+import { Truck, CheckCircle2, Clock, PackageCheck, FileText, ChevronDown } from "lucide-react";
 import { useStore, formatINR, type OrderStatus } from "@/lib/store";
 
 import { AppHeader } from "@/components/app-header";
@@ -32,22 +32,53 @@ const STATUS_META: Record<OrderStatus, { label: string; cls: string; icon: React
 export function PendingOrdersScreen() {
   const { orders, markOrderStatus, products, navigate } = useStore();
   const productFor = (id: string) => products.find((p) => p.id === id);
+  
   const [tab, setTab] = useState<TabKey>("pending");
+  const [selectedBeat, setSelectedBeat] = useState<string>("all");
 
   const inTab = (status: OrderStatus, key: TabKey) =>
     key === "pending" ? status === "pending" || status === "partial" : status === key;
 
+  // सभी उपलब्ध ऑर्डर्स में से यूनीक (Unique) बीट्स के नाम निकालना
+  const uniqueBeats = Array.from(new Set(orders.map((o) => o.beatName))).filter(Boolean);
+
+  // सबसे पहले ऑर्डर्स को सेलेक्ट की गई बीट के हिसाब से फ़िल्टर करना
+  const beatFilteredOrders = selectedBeat === "all"
+    ? orders
+    : orders.filter((o) => o.beatName === selectedBeat);
+
+  // टैब्स की गिनती (Counts) अब सिर्फ चुनी हुई बीट के ऑर्डर्स के हिसाब से होगी
   const counts = {
-    pending: orders.filter((o) => inTab(o.status, "pending")).length,
-    dispatched: orders.filter((o) => inTab(o.status, "dispatched")).length,
-    delivered: orders.filter((o) => inTab(o.status, "delivered")).length,
+    pending: beatFilteredOrders.filter((o) => inTab(o.status, "pending")).length,
+    dispatched: beatFilteredOrders.filter((o) => inTab(o.status, "dispatched")).length,
+    delivered: beatFilteredOrders.filter((o) => inTab(o.status, "delivered")).length,
   };
 
-  const filtered = orders.filter((o) => inTab(o.status, tab));
+  // अब एक्टिव टैब के हिसाब से फ़ाइनल लिस्ट बनाना
+  const filtered = beatFilteredOrders.filter((o) => inTab(o.status, tab));
 
   return (
     <div className="pb-6">
       <AppHeader title="Pending Orders" subtitle="Track deliveries & auto-deduct stock" showBack rounded />
+
+      {/* बीट फ़िल्टर (Beat Filter Dropdown) */}
+      <div className="bg-card px-4 pt-4 pb-2">
+        <div className="relative">
+          <select
+            value={selectedBeat}
+            onChange={(e) => setSelectedBeat(e.target.value)}
+            className="w-full appearance-none rounded-xl bg-surface px-4 py-3 text-sm font-bold text-foreground shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-primary/50"
+          >
+            <option value="all">All Beats (सभी इलाके)</option>
+            {uniqueBeats.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+        </div>
+      </div>
 
       <div className="flex gap-5 overflow-x-auto border-b border-black/5 bg-card px-4">
         {(Object.keys(TAB_META) as TabKey[]).map((k) => (
