@@ -31,6 +31,7 @@ export default defineConfig({
   // Skip Nitro for mobile builds; we only need the static client bundle.
   nitro: isCapacitor ? false : undefined,
   vite: {
+    plugins: [mcpPlugin()],
     ...(isCapacitor && {
       build: {
         outDir: "dist",
