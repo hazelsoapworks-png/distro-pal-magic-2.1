@@ -5,11 +5,13 @@ import {
   Pencil,
   Trash2,
   MapPin,
-  
   Phone,
   Receipt,
   Banknote,
   X,
+  Search,
+  MessageCircle,
+  LocateFixed,
 } from "lucide-react";
 import { useStore, formatINR, type ShopStatus } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
@@ -39,6 +41,7 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
   const shops = beat ? shopsForBeat(beat.id) : [];
 
   const [tab, setTab] = useState<TabKey>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -61,8 +64,10 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
     ordered: shops.filter((s) => s.status === "ordered").length,
     paid: shops.filter((s) => s.status === "paid").length,
   };
-  const filtered =
-    tab === "all" ? shops : shops.filter((s) => s.status === tab);
+
+  const filtered = shops
+    .filter((s) => (tab === "all" ? true : s.status === tab))
+    .filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: "all", label: `All Outlets (${counts.all})` },
@@ -70,6 +75,12 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
     { key: "ordered", label: `Order Taken (${counts.ordered})` },
     { key: "paid", label: `Paid (${counts.paid})` },
   ];
+
+  const sendWhatsApp = (phone: string, message: string) => {
+    if (!phone) return;
+    const url = `https://wa.me/91${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  };
 
   return (
     <div className="pb-6">
@@ -123,7 +134,19 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
         }
       />
 
-      {/* Progress bar */}
+      {/* Search Bar */}
+      <div className="bg-card px-4 py-3 border-b border-black/5">
+        <div className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5">
+          <Search className="size-5 text-muted-foreground" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search outlet name..."
+            className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+          />
+        </div>
+      </div>
+
       <div className="flex items-center justify-between bg-brand-soft px-4 py-3">
         <div>
           <p className="text-xs text-muted-foreground">Visits Progress</p>
@@ -137,7 +160,6 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-5 overflow-x-auto border-b border-black/5 bg-card px-4">
         {tabs.map((t) => (
           <button
@@ -164,7 +186,6 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
         </div>
       )}
 
-      {/* Shop cards */}
       <div className="space-y-4 px-4 pt-4">
         {filtered.map((shop) => {
           const meta = STATUS_META[shop.status];
@@ -172,30 +193,53 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
             <div key={shop.id} className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
               <div className="flex items-start justify-between gap-2">
                 <h2 className="text-lg font-bold text-foreground">{shop.name}</h2>
-                <div className="flex items-center gap-2">
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${meta.cls}`}>
-                    {meta.label}
+                <div className="flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${meta.cls}`}>
+                      {meta.label}
+                    </span>
+                    {deleteMode && (
+                      <button
+                        type="button"
+                        onClick={() => deleteShop(shop.id)}
+                        className="flex size-8 items-center justify-center rounded-full bg-destructive/10 text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-medium text-muted-foreground">
+                    Last Order: {shop.lastOrderDate || "Never"}
                   </span>
-                  {deleteMode && (
-                    <button
-                      type="button"
-                      onClick={() => deleteShop(shop.id)}
-                      aria-label={`Delete ${shop.name}`}
-                      className="flex size-8 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-                    >
-                      <Trash2 className="size-4" />
-                    </button>
-                  )}
                 </div>
               </div>
 
+              {/* Clickable Map Address */}
               <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-                {shop.address}
+                <a 
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.address)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:underline text-primary"
+                >
+                  {shop.address.includes("http") ? "View Location on Map" : shop.address}
+                </a>
               </p>
+
               <p className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="size-4 shrink-0" />
-                {shop.phone}
+                <a href={`tel:${shop.phone.replace(/\s/g, "")}`} className="hover:underline">
+                  {shop.phone}
+                </a>
+              </p>
+
+              <p 
+                className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-success transition-colors"
+                onClick={() => sendWhatsApp(shop.whatsapp || shop.phone, "Hello, regarding your store order")}
+              >
+                <MessageCircle className="size-4 shrink-0 text-success" />
+                {shop.whatsapp || shop.phone}
               </p>
 
               <div className="mt-3 rounded-xl bg-surface p-3">
@@ -238,7 +282,6 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
                 </button>
                 <a
                   href={`tel:${shop.phone.replace(/\s/g, "")}`}
-                  aria-label={`Call ${shop.name}`}
                   className="flex size-12 items-center justify-center rounded-xl border border-black/10 bg-card text-primary"
                 >
                   <Phone className="size-5" />
@@ -247,6 +290,7 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
             </div>
           );
         })}
+
         {filtered.length === 0 && (
           <p className="py-10 text-center text-muted-foreground">No outlets in this list.</p>
         )}
@@ -260,6 +304,7 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
           setAddOpen(false);
         }}
       />
+
       <RenameBeatModal
         open={renameOpen}
         current={beat.name}
@@ -269,8 +314,10 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
           setRenameOpen(false);
         }}
       />
+
       <CollectModal
         shop={collectShop}
+        shops={shops}
         onClose={() => setCollectShop(null)}
         onCollect={(amount, mode) => {
           if (collectShop) collectPayment(collectShop.id, amount, mode);
@@ -299,9 +346,7 @@ function MenuItem({
       className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface"
     >
       {icon}
-      <span className={`font-medium ${danger ? "text-destructive" : "text-foreground"}`}>
-        {label}
-      </span>
+      <span className={`font-medium ${danger ? "text-destructive" : "text-foreground"}`}>{label}</span>
     </button>
   );
 }
@@ -312,39 +357,50 @@ function LabeledInput({
   onChange,
   placeholder,
   type = "text",
+  actionIcon,
+  onAction,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
+  actionIcon?: React.ReactNode;
+  onAction?: () => void;
 }) {
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-foreground">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40 placeholder:text-muted-foreground"
-      />
+      <div className="relative">
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40 placeholder:text-muted-foreground ${
+            actionIcon ? "pr-12" : ""
+          }`}
+        />
+        {actionIcon && (
+          <button
+            type="button"
+            onClick={onAction}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-black/5 rounded-full transition-colors"
+            title="Get Current Location"
+          >
+            {actionIcon}
+          </button>
+        )}
+      </div>
     </label>
   );
 }
 
-function AddShopModal({
-  open,
-  onClose,
-  onAdd,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onAdd: (shop: { name: string; owner: string; phone: string; address: string; dues: number }) => void;
-}) {
+function AddShopModal({ open, onClose, onAdd }: { open: boolean; onClose: () => void; onAdd: (shop: any) => void }) {
   const [name, setName] = useState("");
   const [owner, setOwner] = useState("");
   const [phone, setPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [address, setAddress] = useState("");
   const [dues, setDues] = useState("");
 
@@ -354,14 +410,30 @@ function AddShopModal({
       name: name.trim(),
       owner: owner.trim() || "Owner",
       phone: phone.trim() || "+91 90000 00000",
+      whatsapp: whatsapp.trim() || phone.trim() || "+91 90000 00000",
       address: address.trim() || "Address",
       dues: Number(dues) || 0,
     });
     setName("");
     setOwner("");
     setPhone("");
+    setWhatsapp("");
     setAddress("");
     setDues("");
+  };
+
+  const handleGPS = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const mapLink = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+          setAddress(address ? `${address} - ${mapLink}` : mapLink);
+        },
+        () => alert("Please turn on GPS/Location permissions.")
+      );
+    } else {
+      alert("GPS is not supported on this device.");
+    }
   };
 
   return (
@@ -370,19 +442,23 @@ function AddShopModal({
       <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
         <LabeledInput label="Shop Name" value={name} onChange={setName} placeholder="e.g. Sharma Kirana Store" />
         <LabeledInput label="Owner Name" value={owner} onChange={setOwner} placeholder="e.g. Ramesh Sharma" />
-        <LabeledInput label="Phone" value={phone} onChange={setPhone} placeholder="+91 98765 12345" />
-        <LabeledInput label="Address" value={address} onChange={setAddress} placeholder="Shop address" />
+        <LabeledInput label="Calling Phone" value={phone} onChange={setPhone} placeholder="+91 98765 12345" type="tel" />
+        <LabeledInput label="WhatsApp Number" value={whatsapp} onChange={setWhatsapp} placeholder="Leave empty if same as above" type="tel" />
+        <LabeledInput
+          label="Address (Tap icon for GPS)"
+          value={address}
+          onChange={setAddress}
+          placeholder="Shop address"
+          actionIcon={<LocateFixed className="size-5" />}
+          onAction={handleGPS}
+        />
         <LabeledInput label="Opening Dues (₹)" value={dues} onChange={setDues} placeholder="0" type="number" />
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
         <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
           Cancel
         </button>
-        <button
-          type="button"
-          onClick={submit}
-          className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
-        >
+        <button type="button" onClick={submit} className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground">
           Add Shop
         </button>
       </div>
@@ -390,17 +466,7 @@ function AddShopModal({
   );
 }
 
-function RenameBeatModal({
-  open,
-  current,
-  onClose,
-  onSave,
-}: {
-  open: boolean;
-  current: string;
-  onClose: () => void;
-  onSave: (name: string) => void;
-}) {
+function RenameBeatModal({ open, current, onClose, onSave }: { open: boolean; current: string; onClose: () => void; onSave: (name: string) => void }) {
   const [name, setName] = useState(current);
 
   return (
@@ -413,11 +479,7 @@ function RenameBeatModal({
         <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
           Cancel
         </button>
-        <button
-          type="button"
-          onClick={() => onSave((name || current).trim())}
-          className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
-        >
+        <button type="button" onClick={() => onSave((name || current).trim())} className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground">
           Save
         </button>
       </div>
@@ -427,10 +489,12 @@ function RenameBeatModal({
 
 function CollectModal({
   shop,
+  shops,
   onClose,
   onCollect,
 }: {
   shop: { id: string; name: string; dues: number } | null;
+  shops: any[];
   onClose: () => void;
   onCollect: (amount: number, mode: string) => void;
 }) {
@@ -476,7 +540,19 @@ function CollectModal({
           type="button"
           onClick={() => {
             const amt = Number(amount);
-            if (amt > 0) onCollect(amt, mode);
+            if (amt > 0) {
+              onCollect(amt, mode);
+              if (shop) {
+                const remaining = Math.max(0, shop.dues - amt);
+                const msg = `Payment received from ${shop.name}: ₹${amt} via ${mode}. Remaining dues: ₹${remaining}`;
+                const shopData = shops.find((s) => s.id === shop.id);
+                const phone = shopData?.whatsapp || shopData?.phone || "";
+                if (phone) {
+                  const url = `https://wa.me/91${phone.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
+                  window.open(url, '_blank');
+                }
+              }
+            }
           }}
           className="rounded-full bg-success px-6 py-2.5 font-semibold text-white"
         >

@@ -1,245 +1,83 @@
-import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
-import { Capacitor } from "@capacitor/core";
+import { dbService } from "./sqlite";
+import type { Profile, Beat, Shop, Product, Transaction, Order, PurchaseBill, StockMovement, DispatchRecord } from "./types";
 
-/**
- * DPAS offline persistence layer.
- *
- * Demo data केवल पहली installation पर save होता है।
- * बाद में हमेशा user का saved data ही उपयोग होता है।
- */
-
-export const STORAGE_KEY = "dpas.state";
-export const SCHEMA_VERSION = 4;
-// 1. FOLDER_NAME अब DPAS कर दिया गया है
-const FOLDER_NAME = "DPAS";
-const FILE_NAME = "data.json";
-
-type Data = Record<string, unknown>;
-
-type Envelope = {
-  version: number;
-  savedAt: string;
-  data: Data;
-};
-
-const migrations: Record<number, (data: Data) => Data> = {
-  2: (data) => {
-    const profile = (data.profile as Data | undefined) ?? {};
-
-    return {
-      ...data,
-      profile: {
-        phone: "",
-        address: "",
-        ...profile,
-      },
-    };
-  },
-
-  3: (data) => ({
-    ...data,
-  }),
-
-  4: (data) => {
-    const products = Array.isArray(data.products)
-      ? (data.products as Array<Record<string, unknown>>)
-      : [];
-
-    const isDemoGrocery =
-      products.length > 0 &&
-      products.every(
-        (product) =>
-          typeof product.code === "string" && product.code.startsWith("PRD-00"),
-      );
-
-    if (!isDemoGrocery) {
-      return data;
-    }
-
-    const { products: _old, ...rest } = data;
-
-    return rest;
-  },
-};
-
-function isBrowser(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    typeof window.localStorage !== "undefined"
-  );
+export interface AppStateData {
+  profile: Profile;
+  dailyTarget: number;
+  beats: Beat[];
+  shops: Shop[];
+  products: Product[];
+  transactions: Transaction[];
+  orders: Order[];
+  purchaseBills: PurchaseBill[];
+  stockMovements: StockMovement[];
+  dispatches: DispatchRecord[];
+  syncEnabled: boolean;
+  googleEmail?: string;
 }
 
-// 2. readEnvelope को Async बना दिया गया है ताकि यह Capacitor फाइल को रीड कर सके
-async function readEnvelope(): Promise<Envelope | null> {
-  if (!isBrowser()) {
-    return null;
-  }
-
+export async function loadState(defaults: AppStateData): Promise<AppStateData> {
   try {
-    let raw: string | null = null;
+    await dbService.initializeDatabase();
 
-    // सबसे पहले DPAS फोल्डर (Native Drive) से पढ़ने की कोशिश
-    if (Capacitor.isNativePlatform()) {
-      try {
-        const result = await Filesystem.readFile({
-          path: `${FOLDER_NAME}/${FILE_NAME}`,
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8,
-        });
-        raw = typeof result.data === 'string' ? result.data : null;
-      } catch (err) {
-        // अगर फाइल अभी नहीं बनी है, तो कोई बात नहीं।
-      }
-    }
+    const beats = await dbService.getTableData("beats");
+    const shops = await dbService.getTableData("shops");
+    const products = await dbService.getTableData("products");
+    const transactions = await dbService.getTableData("transactions");
+    const orders = await dbService.getTableData("orders");
+    const purchaseBills = await dbService.getTableData("purchase_bills");
+    const stockMovements = await dbService.getTableData("stock_movements");
+    const dispatches = await dbService.getTableData("dispatches");
 
-    // अगर DPAS में नहीं मिला, तो LocalStorage (Browser Fallback) इस्तेमाल करें
-    if (!raw) {
-      raw = window.localStorage.getItem(STORAGE_KEY);
-    }
+    const profile = await dbService.getMeta("profile", defaults.profile);
+    const dailyTarget = await dbService.getMeta("dailyTarget", defaults.dailyTarget);
+    const syncEnabled = await dbService.getMeta("syncEnabled", defaults.syncEnabled);
+    const googleEmail = await dbService.getMeta("googleEmail", defaults.googleEmail ?? "");
 
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as Partial<Envelope>;
-
-    if (
-      !parsed ||
-      typeof parsed !== "object" ||
-      !parsed.data ||
-      typeof parsed.data !== "object"
-    ) {
-      return null;
+    if (beats.length === 0 && shops.length === 0 && products.length === 0) {
+      await saveState(defaults);
+      return defaults;
     }
 
     return {
-      version: typeof parsed.version === "number" ? parsed.version : 1,
-      savedAt:
-        typeof parsed.savedAt === "string"
-          ? parsed.savedAt
-          : new Date().toISOString(),
-      data: parsed.data as Data,
+      profile,
+      dailyTarget,
+      beats: beats.length > 0 ? beats : defaults.beats,
+      shops: shops.length > 0 ? shops : defaults.shops,
+      products: products.length > 0 ? products : defaults.products,
+      transactions: transactions.length > 0 ? transactions : defaults.transactions,
+      orders: orders.length > 0 ? orders : defaults.orders,
+      purchaseBills: purchaseBills.length > 0 ? purchaseBills : defaults.purchaseBills,
+      stockMovements: stockMovements.length > 0 ? stockMovements : defaults.stockMovements,
+      dispatches: dispatches.length > 0 ? dispatches : defaults.dispatches,
+      syncEnabled,
+      googleEmail,
     };
-  } catch {
-    return null;
-  }
-}
-
-function runMigrations(envelope: Envelope): Data {
-  let data = envelope.data;
-
-  for (
-    let version = envelope.version + 1;
-    version <= SCHEMA_VERSION;
-    version += 1
-  ) {
-    const migration = migrations[version];
-
-    if (migration) {
-      data = migration(data);
-    }
-  }
-
-  return data;
-}
-
-// चूँकि readEnvelope async हो गया है, loadState को भी async बनाना पड़ा
-export async function loadState<T extends Data>(defaults: T): Promise<T> {
-  if (!isBrowser()) {
+  } catch (error) {
+    console.error("Failed to load state from SQLite, falling back to defaults:", error);
     return defaults;
   }
-
-  const envelope = await readEnvelope();
-
-  if (!envelope) {
-    await saveState(defaults);
-    return defaults;
-  }
-
-  const migrated = runMigrations(envelope);
-  const merged: Data = { ...defaults };
-
-  Object.keys(defaults).forEach((key) => {
-    const storedValue = migrated[key];
-
-    if (storedValue === undefined || storedValue === null) {
-      return;
-    }
-
-    const defaultValue = defaults[key];
-
-    if (
-      typeof storedValue === "object" &&
-      !Array.isArray(storedValue) &&
-      typeof defaultValue === "object" &&
-      defaultValue !== null &&
-      !Array.isArray(defaultValue)
-    ) {
-      merged[key] = {
-        ...(defaultValue as Data),
-        ...(storedValue as Data),
-      };
-      return;
-    }
-
-    merged[key] = storedValue;
-  });
-
-  if (envelope.version !== SCHEMA_VERSION) {
-    await saveState(merged);
-  }
-
-  return merged as T;
 }
 
-export async function saveState(data: Data): Promise<void> {
-  if (!isBrowser()) {
-    return;
-  }
-
+export async function saveState(state: AppStateData): Promise<void> {
   try {
-    const envelope: Envelope = {
-      version: SCHEMA_VERSION,
-      savedAt: new Date().toISOString(),
-      data,
-    };
+    await dbService.initializeDatabase();
 
-    // Web Backup
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(envelope));
-
-    // Mobile specific: Save to local drive DPAS Folder
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await Filesystem.mkdir({
-          path: FOLDER_NAME,
-          directory: Directory.Documents,
-          recursive: true,
-        }).catch(() => {
-          /* Folder might already exist */
-        });
-
-        await Filesystem.writeFile({
-          path: `${FOLDER_NAME}/${FILE_NAME}`,
-          data: JSON.stringify(envelope, null, 2),
-          directory: Directory.Documents,
-          encoding: Encoding.UTF8,
-        });
-      } catch (err) {
-        console.error("Failed to save to local DPAS drive:", err);
-      }
-    }
-  } catch {
-    // Storage quota या device error की वजह से app crash नहीं होगी।
-  }
-}
-
-export function clearState(): void {
-  if (!isBrowser()) {
-    return;
-  }
-  try {
-    window.localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // कोई action जरूरी नहीं।
+    await Promise.all([
+      dbService.saveTableData("beats", state.beats),
+      dbService.saveTableData("shops", state.shops),
+      dbService.saveTableData("products", state.products),
+      dbService.saveTableData("transactions", state.transactions),
+      dbService.saveTableData("orders", state.orders),
+      dbService.saveTableData("purchase_bills", state.purchaseBills),
+      dbService.saveTableData("stock_movements", state.stockMovements),
+      dbService.saveTableData("dispatches", state.dispatches),
+      dbService.setMeta("profile", state.profile),
+      dbService.setMeta("dailyTarget", state.dailyTarget),
+      dbService.setMeta("syncEnabled", state.syncEnabled),
+      dbService.setMeta("googleEmail", state.googleEmail),
+    ]);
+  } catch (error) {
+    console.error("Failed to save state to SQLite:", error);
   }
 }

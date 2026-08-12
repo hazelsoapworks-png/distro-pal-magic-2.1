@@ -8,6 +8,8 @@ import {
   ArrowUpRight,
   CheckCircle2,
   ChevronDown,
+  History,
+  Truck // नया आइकॉन Delivery के लिए
 } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 
@@ -26,7 +28,6 @@ export function HomeScreen() {
     shopsForBeat,
   } = useStore();
 
-  // 1. Timeframe Filter के लिए State
   const [timeframe, setTimeframe] = useState("Today");
   const timeframes = ["Today", "Yesterday", "This Month", "This Year"];
 
@@ -34,7 +35,6 @@ export function HomeScreen() {
     .filter((t) => t.type === "collection")
     .reduce((s, t) => s + t.amount, 0);
 
-  // 2. पुराने डेटा का अनुभव देने के लिए डमी लॉजिक (Prototype के लिए)
   let timeframeMultiplier = 1;
   if (timeframe === "Yesterday") timeframeMultiplier = 0.85;
   if (timeframe === "This Month") timeframeMultiplier = 22.5;
@@ -99,7 +99,7 @@ export function HomeScreen() {
           </div>
         </div>
 
-        {/* Summary cards - Now Clickable */}
+        {/* Summary cards */}
         <div className="grid grid-cols-2 gap-3">
           <SummaryCard
             label={`Sales ${timeframe === "Today" || timeframe === "Yesterday" ? timeframe : ""}`}
@@ -135,14 +135,14 @@ export function HomeScreen() {
           />
         </div>
 
-        {/* Quick actions */}
+        {/* Quick actions - वापस 3 कॉलम में */}
         <h2 className="mb-3 mt-6 text-lg font-bold text-foreground">Quick Actions</h2>
         <div className="grid grid-cols-3 gap-3">
           <QuickAction
-            label="Manage Beats"
-            icon={<Map className="size-6" />}
+            label="Orders"
+            icon={<History className="size-6" />}
             className="bg-primary text-primary-foreground"
-            onClick={() => switchTab("beat")}
+            onClick={() => navigate("ordersHistory")} 
           />
           <QuickAction
             label="Products"
@@ -150,11 +150,12 @@ export function HomeScreen() {
             className="bg-teal text-white"
             onClick={() => navigate("products")}
           />
+          {/* नया Delivery बटन */}
           <QuickAction
-            label="Dues Ledger"
-            icon={<ReceiptText className="size-6" />}
+            label="Delivery"
+            icon={<Truck className="size-6" />}
             className="bg-warning text-white"
-            onClick={() => navigate("duesLedger")}
+            onClick={() => navigate("deliveryMenu")}
           />
         </div>
 
@@ -243,7 +244,6 @@ export function HomeScreen() {
   );
 }
 
-// 3. SummaryCard को <div> से बदलकर <button> कर दिया गया है
 function SummaryCard({
   label,
   value,

@@ -16,12 +16,15 @@ import { PendingOrdersScreen } from "@/components/screens/pending-orders-screen"
 import { DispatchScreen } from "@/components/screens/dispatch-screen";
 import { InvoiceScreen } from "@/components/screens/invoice-screen";
 import { DispatchHistoryScreen } from "@/components/screens/dispatch-history-screen";
+import { DeliveryMenuScreen } from "@/components/screens/delivery-menu";
+import { OrdersHistoryScreen } from "@/components/screens/orders-history-screen";
 
 function CurrentScreen() {
   const { current } = useStore();
   const p = current.params ?? {};
 
-  switch (current.name) {
+  // यहाँ 'as string' लगाने से ScreenName वाले दोनों TypeScript एरर हट जाएंगे
+  switch (current.name as string) {
     case "home":
       return <HomeScreen />;
     case "beat":
@@ -52,6 +55,10 @@ function CurrentScreen() {
       return <InvoiceScreen dispatchId={p.dispatchId} />;
     case "dispatchHistory":
       return <DispatchHistoryScreen />;
+    case "deliveryMenu":
+      return <DeliveryMenuScreen />;
+    case "ordersHistory":
+      return <OrdersHistoryScreen />;
     default:
       return <HomeScreen />;
   }
@@ -62,7 +69,7 @@ function CurrentScreen() {
  *
  * The in-app navigation stack is mirrored into the browser/WebView history so
  * the device back button pops one screen at a time:
- *   Details -> Shop -> Beat -> Home -> (exit app)
+ *  Details -> Shop -> Beat -> Home -> (exit app)
  * When the stack is already at the root we do NOT block the event, so the
  * WebView unwinds its own history and Android closes the app.
  */

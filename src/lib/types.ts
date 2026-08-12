@@ -15,7 +15,9 @@ export type ScreenName =
   | "pendingOrders"
   | "dispatch"
   | "invoice"
-  | "dispatchHistory";
+  | "dispatchHistory"
+  | "deliveryMenu"    // <-- नया जोड़ा गया
+  | "ordersHistory";  // <-- नया जोड़ा गया
 
 export type ScreenEntry = {
   name: ScreenName;
@@ -36,6 +38,8 @@ export type Shop = {
   orderAmount?: number;
   paidAmount?: number;
   lastSellingPrices?: Record<string, number>;
+  whatsapp?: string;       // <-- नया जोड़ा गया
+  lastOrderDate?: string;  // <-- नया जोड़ा गया
 };
 
 export type Beat = {

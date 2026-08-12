@@ -7,7 +7,6 @@ import {
   Pencil,
   Trash2,
   ArrowLeft,
-  ChevronRight,
   Store,
 } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
@@ -16,15 +15,15 @@ import { Modal } from "@/components/modal";
 
 export function BeatScreen() {
   const {
-  beats,
-  shopsForBeat,
-  duesForBeat,
-  navigate,
-  goBack,
-  addBeat,
-  renameBeat,
-  deleteBeat,
-} = useStore();
+    beats,
+    shopsForBeat,
+    duesForBeat,
+    navigate,
+    goBack,
+    addBeat,
+    renameBeat,
+    deleteBeat,
+  } = useStore();
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editBeat, setEditBeat] = useState<{ id: string; name: string } | null>(null);
@@ -40,22 +39,22 @@ export function BeatScreen() {
     <div className="relative pb-24">
       <header className="app-safe-top rounded-b-3xl bg-primary px-4 pb-5 text-primary-foreground">
         <div className="flex items-start justify-between">
-         <div className="flex items-start gap-3">
-  <button
-    type="button"
-    onClick={goBack}
-    className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
-  >
-    <ArrowLeft className="size-5" />
-  </button>
+          <div className="flex items-start gap-3">
+            <button
+              type="button"
+              onClick={goBack}
+              className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
+            >
+              <ArrowLeft className="size-5" />
+            </button>
 
-  <div>
-    <h1 className="text-2xl font-bold">Beat Management</h1>
-    <p className="mt-0.5 text-sm text-primary-foreground/85">
-      {beats.length} Active Beats Listed
-    </p>
-  </div>
-</div>
+            <div>
+              <h1 className="text-2xl font-bold">Beat Management</h1>
+              <p className="mt-0.5 text-sm text-primary-foreground/85">
+                {beats.length} Active Beats Listed
+              </p>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setAddOpen(true)}
@@ -82,7 +81,11 @@ export function BeatScreen() {
           const shops = shopsForBeat(b.id);
           const pending = shops.filter((s) => s.status === "pending").length;
           return (
-            <div key={b.id} className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
+            <div
+              key={b.id}
+              onClick={() => navigate("beatDetail", { beatId: b.id })}
+              className="cursor-pointer rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md"
+            >
               <div className="flex items-start gap-3">
                 <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-primary">
                   <Map className="size-5" />
@@ -95,26 +98,27 @@ export function BeatScreen() {
                   </p>
                 </div>
               
-                <div className="flex items-center gap-2">
-  <button
-    type="button"
-    onClick={() => setEditBeat({ id: b.id, name: b.name })}
-    aria-label={`Edit ${b.name}`}
-    className="text-muted-foreground transition-colors hover:text-primary"
-  >
-    <Pencil className="size-5" />
-  </button>
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => setEditBeat({ id: b.id, name: b.name })}
+                    aria-label={`Edit ${b.name}`}
+                    className="text-muted-foreground transition-colors hover:text-primary p-1"
+                  >
+                    <Pencil className="size-5" />
+                  </button>
 
-  <button
-    type="button"
-    onClick={() => setDeleteBeatItem(b)}
-    aria-label={`Delete ${b.name}`}
-    className="text-red-500 transition-colors hover:text-red-700"
-  >
-    <Trash2 className="size-5" />
-  </button>
- </div>
-</div>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteBeatItem(b)}
+                    aria-label={`Delete ${b.name}`}
+                    className="text-red-500 transition-colors hover:text-red-700 p-1"
+                  >
+                    <Trash2 className="size-5" />
+                  </button>
+                </div>
+              </div>
+
               <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-surface px-3 py-3 text-center">
                 <Metric label="Total Outlets" value={`${shops.length} Shops`} />
                 <Metric label="Pending Visit" value={`${pending} Pending`} accent="text-primary" />
@@ -123,19 +127,6 @@ export function BeatScreen() {
                   value={formatINR(duesForBeat(b.id))}
                   accent="text-warning"
                 />
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-primary">
-                  Active Beat Route
-                </span>
-                <button
-                  type="button"
-                  onClick={() => navigate("beatDetail", { beatId: b.id })}
-                  className="flex items-center gap-1 text-sm font-semibold text-primary"
-                >
-                  Manage Outlets <ChevronRight className="size-4" />
-                </button>
               </div>
             </div>
           );
@@ -155,42 +146,42 @@ export function BeatScreen() {
         }}
       /> 
 
-<Modal
-  open={!!deleteBeatItem}
-  onClose={() => setDeleteBeatItem(null)}
->
-  <h3 className="text-xl font-bold text-foreground">
-    Delete Beat
-  </h3>
+      <Modal
+        open={!!deleteBeatItem}
+        onClose={() => setDeleteBeatItem(null)}
+      >
+        <h3 className="text-xl font-bold text-foreground">
+          Delete Beat
+        </h3>
 
-  <p className="mt-3 text-sm text-muted-foreground">
-    Are you sure you want to delete this beat?
-  </p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Are you sure you want to delete this beat?
+        </p>
 
-  <div className="mt-6 flex justify-end gap-3">
-    <button
-      type="button"
-      onClick={() => setDeleteBeatItem(null)}
-      className="px-4 py-2 font-semibold text-muted-foreground"
-    >
-      No
-    </button>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setDeleteBeatItem(null)}
+            className="px-4 py-2 font-semibold text-muted-foreground"
+          >
+            No
+          </button>
 
-    <button
-      type="button"
-      onClick={() => {
-        if (deleteBeatItem) {
-          deleteBeat(deleteBeatItem.id);
-        }
-        setDeleteBeatItem(null);
-      }}
-      className="rounded-full bg-red-600 px-5 py-2 font-semibold text-white"
-    >
-      Yes
-    </button>
-  </div>
-</Modal>
- </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (deleteBeatItem) {
+                deleteBeat(deleteBeatItem.id);
+              }
+              setDeleteBeatItem(null);
+            }}
+            className="rounded-full bg-red-600 px-5 py-2 font-semibold text-white"
+          >
+            Yes
+          </button>
+        </div>
+      </Modal>
+    </div>
   );
 }
 

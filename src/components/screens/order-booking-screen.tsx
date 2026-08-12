@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Minus, Plus, ShoppingCart, TrendingUp } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { ProductThumb } from "@/components/product-thumb";
@@ -26,7 +26,7 @@ export function OrderBookingScreen({
       [id]: Math.max(0, Math.min(999, v)),
     }));
 
-  // ऑर्डर की लाइन्स कैलकुलेट करना (कस्टम रेट के साथ)
+  // ऑर्डर की लाइन्स कैलकुलेट करना (कस्टम रेट और मार्जिन के साथ)
   const lines = products
     .map((p) => {
       const q = qty[p.id] ?? 0;
@@ -38,20 +38,37 @@ export function OrderBookingScreen({
         ? Number(customVal) 
         : defaultPriceVal;
 
+      // प्रॉफिट मार्जिन कैलकुलेशन (Selling Price - Purchase Price)
+      // (अगर purchasePrice डेटाबेस में नहीं है, तो उसे 0 मानकर कैलकुलेट करेगा)
+      const costPrice = (p as any).purchasePrice || 0; 
+      const unitMargin = finalPrice - costPrice;
+      const lineMargin = unitMargin * q;
+
       return {
         p,
         q,
         price: finalPrice,
+        unitMargin,
+        lineMargin,
       };
     })
     .filter((l) => l.q > 0);
 
   const total = lines.reduce((s, l) => s + l.q * l.price, 0);
   const items = lines.reduce((s, l) => s + l.q, 0);
+  const totalMargin = lines.reduce((s, l) => s + l.lineMargin, 0);
+
+  // WhatsApp मैसेज भेजने का फंक्शन
+  const sendWhatsApp = (phone: string, text: string) => {
+    if (!phone) return;
+    const url = `https://wa.me/91${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
 
   const confirm = () => {
     if (!shop || lines.length === 0) return;
 
+    // 1. डेटाबेस में ऑर्डर सेव करें
     placeOrder(
       shop.id,
       lines.map((l) => ({
@@ -62,6 +79,19 @@ export function OrderBookingScreen({
       beat?.name ?? "Beat",
     );
 
+    // 2. WhatsApp Auto-Draft Message तैयार करें
+    let msg = `नमस्ते ${shop.name},\nआपका नया ऑर्डर बुक हो गया है:\n\n`;
+    lines.forEach((l, index) => {
+      msg += `${index + 1}. ${l.p.name} - ${l.q} ${l.p.unit} x ₹${l.price}\n`;
+    });
+    msg += `\nकुल राशि: ₹${total}\nधन्यवाद!`;
+
+    const phone = (shop as any).whatsapp || shop.phone;
+    if (phone) {
+      sendWhatsApp(phone, msg);
+    }
+
+    // 3. वापस पिछली स्क्रीन पर जाएँ
     goBack();
   };
 
@@ -86,6 +116,10 @@ export function OrderBookingScreen({
           const lastPrice = shop?.lastSellingPrices?.[p.id];
           const defaultPriceVal = lastPrice !== undefined ? lastPrice : p.sellingPrice;
           const currentInputValue = customPrices[p.id] !== undefined ? customPrices[p.id] : defaultPriceVal.toString();
+          
+          // कार्ड पर दिखाने के लिए मार्जिन कैलकुलेशन
+          const costPrice = (p as any).purchasePrice || 0;
+          const currentUnitMargin = Number(currentInputValue || 0) - costPrice;
 
           return (
             <div
@@ -136,18 +170,26 @@ export function OrderBookingScreen({
                   <span className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Today's Rate (₹)
                   </span>
-                  <input
-                    inputMode="decimal"
-                    type="number"
-                    value={currentInputValue}
-                    onChange={(e) =>
-                      setCustomPrices((prev) => ({
-                        ...prev,
-                        [p.id]: e.target.value,
-                      }))
-                    }
-                    className="h-9 w-24 rounded-lg bg-surface px-2 text-center text-sm font-bold text-foreground outline-none ring-1 ring-black/5 focus:ring-primary/40"
-                  />
+                  <div className="flex flex-col gap-1">
+                    <input
+                      inputMode="decimal"
+                      type="number"
+                      value={currentInputValue}
+                      onChange={(e) =>
+                        setCustomPrices((prev) => ({
+                          ...prev,
+                          [p.id]: e.target.value,
+                        }))
+                      }
+                      className="h-9 w-24 rounded-lg bg-surface px-2 text-center text-sm font-bold text-foreground outline-none ring-1 ring-black/5 focus:ring-primary/40"
+                    />
+                    {/* नया फीचर: हर पीस पर मार्जिन (प्रॉफिट) */}
+                    {costPrice > 0 && (
+                      <span className={`text-[10px] font-semibold ${currentUnitMargin >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        Margin: {formatINR(currentUnitMargin)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex flex-col items-end">
@@ -194,13 +236,19 @@ export function OrderBookingScreen({
         })}
       </div>
 
+      {/* Bottom Sticky Bar */}
       <div className="fixed inset-x-0 bottom-[4.5rem] z-30 mx-auto max-w-md px-4">
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-card p-3 shadow-lg ring-1 ring-black/5">
-          <div>
-            <p className="text-xs text-muted-foreground">
-              {items} items
-            </p>
-
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">{items} items</p>
+              {/* नया फीचर: टोटल मार्जिन */}
+              {totalMargin > 0 && (
+                <span className="flex items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                  <TrendingUp className="size-3" /> {formatINR(totalMargin)}
+                </span>
+              )}
+            </div>
             <p className="text-lg font-bold text-foreground">
               {formatINR(total)}
             </p>
