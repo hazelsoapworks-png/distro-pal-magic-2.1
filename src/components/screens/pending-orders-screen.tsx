@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Truck, CheckCircle2, Clock, PackageCheck, FileText, ChevronDown } from "lucide-react";
-import { useStore, formatINR, type OrderStatus } from "@/lib/store";
+import { Truck, CheckCircle2, Clock, PackageCheck, FileText, ChevronDown, Edit2, Minus, Plus, Trash2, X } from "lucide-react";
+import { useStore, formatINR, type OrderStatus, type Order, type OrderLine } from "@/lib/store";
 
 import { AppHeader } from "@/components/app-header";
 import { ProductThumb } from "@/components/product-thumb";
@@ -30,38 +30,80 @@ const STATUS_META: Record<OrderStatus, { label: string; cls: string; icon: React
 };
 
 export function PendingOrdersScreen() {
-  const { orders, markOrderStatus, products, navigate } = useStore();
+  const { orders, markOrderStatus, products, navigate, cancelOrder, updateOrderLines } = useStore();
   const productFor = (id: string) => products.find((p) => p.id === id);
   
   const [tab, setTab] = useState<TabKey>("pending");
   const [selectedBeat, setSelectedBeat] = useState<string>("all");
 
+  // Edit / Cancel States
+  const [editOrder, setEditOrder] = useState<Order | null>(null);
+  const [editMode, setEditMode] = useState<"choose" | "edit_items" | null>(null);
+  const [editQuantities, setEditQuantities] = useState<Record<string, number>>({});
+
   const inTab = (status: OrderStatus, key: TabKey) =>
     key === "pending" ? status === "pending" || status === "partial" : status === key;
 
-  // सभी उपलब्ध ऑर्डर्स में से यूनीक (Unique) बीट्स के नाम निकालना
   const uniqueBeats = Array.from(new Set(orders.map((o) => o.beatName))).filter(Boolean);
 
-  // सबसे पहले ऑर्डर्स को सेलेक्ट की गई बीट के हिसाब से फ़िल्टर करना
   const beatFilteredOrders = selectedBeat === "all"
     ? orders
     : orders.filter((o) => o.beatName === selectedBeat);
 
-  // टैब्स की गिनती (Counts) अब सिर्फ चुनी हुई बीट के ऑर्डर्स के हिसाब से होगी
   const counts = {
     pending: beatFilteredOrders.filter((o) => inTab(o.status, "pending")).length,
     dispatched: beatFilteredOrders.filter((o) => inTab(o.status, "dispatched")).length,
     delivered: beatFilteredOrders.filter((o) => inTab(o.status, "delivered")).length,
   };
 
-  // अब एक्टिव टैब के हिसाब से फ़ाइनल लिस्ट बनाना
   const filtered = beatFilteredOrders.filter((o) => inTab(o.status, tab));
+
+  // Modal Handlers
+  const openEditModal = (o: Order) => {
+    setEditOrder(o);
+    setEditMode("choose");
+    const qs: Record<string, number> = {};
+    o.lines.forEach(l => { qs[l.productId] = l.qty; });
+    setEditQuantities(qs);
+  };
+
+  const closeEditModal = () => {
+    setEditOrder(null);
+    setEditMode(null);
+  };
+
+  const handleCancelEntireOrder = () => {
+    if (editOrder) {
+      cancelOrder(editOrder.id);
+      closeEditModal();
+    }
+  };
+
+  const setQty = (productId: string, val: number) => {
+    setEditQuantities(prev => ({ ...prev, [productId]: Math.max(0, val) }));
+  };
+
+  const saveEditedOrder = () => {
+    if (!editOrder) return;
+    
+    const newLines: OrderLine[] = editOrder.lines.map(l => ({
+      ...l,
+      qty: editQuantities[l.productId] ?? 0
+    })).filter(l => l.qty > 0);
+
+    if (newLines.length === 0) {
+      // If all quantities set to 0, just cancel the order
+      cancelOrder(editOrder.id);
+    } else {
+      updateOrderLines(editOrder.id, newLines);
+    }
+    closeEditModal();
+  };
 
   return (
     <div className="pb-6">
       <AppHeader title="Pending Orders" subtitle="Track deliveries & auto-deduct stock" showBack rounded />
 
-      {/* बीट फ़िल्टर (Beat Filter Dropdown) */}
       <div className="bg-card px-4 pt-4 pb-2">
         <div className="relative">
           <select
@@ -148,23 +190,31 @@ export function PendingOrdersScreen() {
                   <p className="text-xs text-muted-foreground">Order Total</p>
                   <div className="flex items-center gap-2">
                     <p className="text-lg font-bold text-primary">{formatINR(o.total)}</p>
-                    {o.totalMargin !== undefined && (
-                      <span className="rounded-md bg-success-soft px-1.5 py-0.5 text-xs font-bold text-success">
-                        Profit: {formatINR(o.totalMargin)}
-                      </span>
-                    )}
                   </div>
                 </div>
+                
+                {/* 1. New Cancel/Edit Action Group */}
                 {(o.status === "pending" || o.status === "partial") && (
-                  <button
-                    type="button"
-                    onClick={() => navigate("dispatch", { orderId: o.id })}
-                    className="flex items-center gap-2 rounded-xl bg-brand-soft px-4 py-2.5 font-semibold text-primary"
-                  >
-                    <Truck className="size-4" />
-                    Dispatch
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(o)}
+                      className="flex items-center justify-center rounded-xl border border-border bg-white px-3 py-2.5 font-semibold text-muted-foreground"
+                    >
+                      <Edit2 className="size-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate("dispatch", { orderId: o.id })}
+                      className="flex items-center gap-2 rounded-xl bg-brand-soft px-4 py-2.5 font-semibold text-primary"
+                    >
+                      <Truck className="size-4" />
+                      Dispatch
+                    </button>
+                  </div>
                 )}
+                
                 {o.status === "dispatched" && (
                   <button
                     type="button"
@@ -196,6 +246,89 @@ export function PendingOrdersScreen() {
           );
         })}
       </div>
+
+      {/* 2. Custom Modals for Edit/Cancel */}
+      {editMode === "choose" && editOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-card p-5 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Modify Pending Order</h3>
+              <button onClick={closeEditModal} className="rounded-full bg-surface p-1"><X className="size-5" /></button>
+            </div>
+            <p className="mb-6 text-sm text-muted-foreground">
+              Do you want to cancel the whole order or edit the remaining items?
+            </p>
+            <div className="flex flex-col gap-3">
+              <button onClick={handleCancelEntireOrder} className="w-full rounded-xl bg-destructive px-4 py-3 font-semibold text-white">
+                Cancel Entire Order
+              </button>
+              <button onClick={() => setEditMode("edit_items")} className="w-full rounded-xl bg-brand-soft px-4 py-3 font-semibold text-primary">
+                Edit Items & Quantity
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editMode === "edit_items" && editOrder && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-2xl bg-card p-5 shadow-lg max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between mb-4 shrink-0">
+              <h3 className="text-lg font-bold">Edit Quantities</h3>
+              <button onClick={closeEditModal} className="rounded-full bg-surface p-1"><X className="size-5" /></button>
+            </div>
+            
+            <div className="overflow-y-auto space-y-4 pb-4">
+              {editOrder.lines.map(l => {
+                const p = productFor(l.productId);
+                const q = editQuantities[l.productId] ?? 0;
+                
+                return (
+                  <div key={l.productId} className="flex items-center justify-between gap-3 rounded-xl bg-surface p-3 ring-1 ring-black/5">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <ProductThumb src={p?.imageUrl} name={p?.name ?? "Item"} className="size-[40px]" />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground truncate">{p?.name}</p>
+                        <p className="text-xs text-muted-foreground">{formatINR(l.price)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {q === 0 ? (
+                        <div className="flex size-8 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                           <Trash2 className="size-4" />
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => setQty(l.productId, q - 1)} className="flex size-8 items-center justify-center rounded-lg bg-card text-foreground shadow-sm">
+                          <Minus className="size-4" />
+                        </button>
+                      )}
+                      
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        value={q}
+                        onChange={(e) => setQty(l.productId, Number(e.target.value.replace(/\D/g, "")) || 0)}
+                        className="h-8 w-10 rounded-lg bg-card text-center text-sm font-semibold text-foreground outline-none shadow-sm"
+                      />
+                      
+                      <button type="button" onClick={() => setQty(l.productId, q + 1)} className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+                        <Plus className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-border shrink-0">
+               <button onClick={saveEditedOrder} className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground">
+                 Save Changes
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
