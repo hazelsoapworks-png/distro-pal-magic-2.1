@@ -128,6 +128,10 @@ type StoreValue = {
   ) => string | undefined;
   addPurchaseBill: (bill: NewPurchaseBill) => void;
   collectPayment: (shopId: string, amount: number, mode: string) => void;
+  
+  // New functions for Universal Edit/Cancel
+  cancelOrder: (orderId: string) => void;
+  updateOrderLines: (orderId: string, updatedLines: OrderLine[]) => void;
 };
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -175,21 +179,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [googleEmail, setGoogleEmail] = useState("");
 
   useEffect(() => {
-    const state = loadState(buildDefaults());
-
-    setProfile(state.profile);
-    setDailyTarget(state.dailyTarget);
-    setBeats(state.beats);
-    setShops(state.shops);
-    setProducts(state.products);
-    setTransactions(state.transactions);
-    setOrders(state.orders);
-    setPurchaseBills(state.purchaseBills);
-    setStockMovements(state.stockMovements);
-    setDispatches(state.dispatches);
-    setSyncEnabled(state.syncEnabled);
-    setGoogleEmail(state.googleEmail ?? "");
-    setHydrated(true);
+    // 1. अब loadState Async हो गया है, इसलिए then() का इस्तेमाल किया है
+    loadState(buildDefaults()).then((state) => {
+      setProfile(state.profile);
+      setDailyTarget(state.dailyTarget);
+      setBeats(state.beats);
+      setShops(state.shops);
+      setProducts(state.products);
+      setTransactions(state.transactions);
+      setOrders(state.orders);
+      setPurchaseBills(state.purchaseBills);
+      setStockMovements(state.stockMovements);
+      setDispatches(state.dispatches);
+      setSyncEnabled(state.syncEnabled);
+      setGoogleEmail(state.googleEmail ?? "");
+      setHydrated(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -227,9 +232,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const navigate = useCallback<StoreValue["navigate"]>((name, params) => {
     const destination = { name, params };
-
     setStack((previous) => navigateStack(previous, destination));
-
     if (isTabScreen(name)) {
       setActiveTab(name);
     }
@@ -239,16 +242,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (stack.length <= 1) {
       return false;
     }
-
     const nextStack = goBackStack(stack);
     const nextScreen = nextStack[nextStack.length - 1];
-
     setStack(nextStack);
-
     if (isTabScreen(nextScreen.name)) {
       setActiveTab(nextScreen.name);
     }
-
     return true;
   }, [stack]);
 
@@ -324,7 +323,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      
       deleteBeat: (beatId) => {
         setBeats((previous) => deleteBeat(previous, beatId));
-
         setShops((previous) =>
           previous.filter((shop) => shop.beatId !== beatId),
         );
@@ -360,9 +358,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       placeOrder: (shopId, lines, beatName) => {
         const shop = shops.find((item) => item.id === shopId);
-
         if (!shop) return;
-
         const order = createOrder(
           createId("ord"),
           shop,
@@ -371,11 +367,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           products,
           new Date().toISOString(),
         );
-
         if (!order) return;
-
         setOrders((previous) => [order, ...previous]);
-
         setShops((previous) =>
           applyOrderToShop(
             previous,
@@ -384,11 +377,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             latestSellingPrices(lines, shop.lastSellingPrices),
           ),
         );
-
         setBeats((previous) =>
           addBeatSales(previous, beatName, order.total),
         );
-
         addTransaction({
           type: "order",
           title: `Order: ${shop.name}`,
@@ -404,15 +395,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           );
           return;
         }
-
         const result = deliverOrder(
           orders,
           orderId,
           new Date().toISOString(),
         );
-
         setOrders(result.orders);
-
         if (result.stockMovements.length > 0) {
           setStockMovements((previous) => [
             ...result.stockMovements,
@@ -421,15 +409,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       },
 
+      // 2. Dispatch Split Bug Fix
       confirmDispatch: (orderId, input) => {
         const order = orders.find((item) => item.id === orderId);
-
         if (!order) return undefined;
 
         const quantities = input.quantities;
         const remainingAction = input.remainingAction;
 
-        // Process dispatch
         const result = createDispatch(
           order,
           { ...input, quantities },
@@ -441,41 +428,59 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
         if (!result) return undefined;
 
-        // Handle remaining items
         const remainingLines = order.lines.map(l => ({
           ...l,
           pendingQty: Math.max(0, l.qty - (quantities[l.productId] || 0))
         })).filter(l => l.pendingQty > 0);
 
-        if (remainingLines.length > 0) {
-        if (remainingAction === "backorder") {
-            const backOrder = {
+        const dispatchedLines = order.lines.map(l => ({
+          ...l,
+          qty: quantities[l.productId] || 0
+        })).filter(l => l.qty > 0);
+
+        setOrders((prev) => {
+          let next = [...prev];
+
+          if (remainingAction === "backorder" && remainingLines.length > 0) {
+            // बचे हुए आइटम्स का नया आर्डर (Partially Dispatched टैग के साथ)
+            const backOrder: Order = {
               ...order,
               id: createId("ord"),
-              lines: remainingLines.map(l => ({ productId: l.productId, qty: l.pendingQty, price: l.price })),
+              lines: remainingLines.map(l => ({ 
+                productId: l.productId, 
+                qty: l.pendingQty, 
+                price: l.price,
+                status: "pending" 
+              })),
               total: remainingLines.reduce((sum, l) => sum + (l.pendingQty * l.price), 0),
-              status: "pending" as OrderStatus,
+              status: "partial", // इससे "Partially Dispatched" टैग दिखेगा
               createdAt: new Date().toISOString(),
               backOrderOf: orderId
-    };
-            setOrders((prev) => [backOrder, ...prev]);
-          } else if (remainingAction === "cancel") {
-            // Update original order lines to show cancellation
-            setOrders((prev) => prev.map(o => o.id === orderId ? {
-              ...o,
-              lines: o.lines.map(l => ({
-                ...l,
-                status: (quantities[l.productId] || 0) < l.qty ? "cancelled" : "delivered"
-              }))
-            } : o));
+            };
+            next = [backOrder, ...next];
           }
-        }
+
+          // ओरिजिनल आर्डर को अपडेट करें (सिर्फ डिस्पैच हुए आइटम्स रखें और स्टेटस बदलें)
+          next = next.map(o => {
+            if (o.id === orderId) {
+              return {
+                ...o,
+                lines: dispatchedLines,
+                total: dispatchedLines.reduce((sum, l) => sum + (l.qty * l.price), 0),
+                status: "dispatched"
+              };
+            }
+            return o;
+          });
+
+          return next;
+        });
 
         setDispatches((previous) => [result.dispatch, ...previous]);
         setStockMovements((previous) => [
           ...result.stockMovements,
           ...previous,
-  ]);
+        ]);
 
         return result.dispatchId;
       },
@@ -484,13 +489,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const result = createPurchaseBill(
           bill,
           new Date().toISOString(),
-  );
-
+        );
         setPurchaseBills((previous) => [
           result.purchaseBill,
           ...previous,
         ]);
-
         setStockMovements((previous) => [
           ...result.stockMovements,
           ...previous,
@@ -499,11 +502,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       collectPayment: (shopId, amount, mode) => {
         const shop = shops.find((item) => item.id === shopId);
-
         setShops((previous) =>
           applyCollectionToShop(previous, shopId, amount),
         );
-
         addTransaction({
           type: "collection",
           title: `Collection: ${shop?.name ?? "Shop"}`,
@@ -512,6 +513,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           )}`,
           amount,
         });
+      },
+
+      // 3. New Edit/Cancel Actions
+      cancelOrder: (orderId) => {
+        setOrders((prev) => prev.map(o => o.id === orderId ? { ...o, status: "cancelled" } : o));
+      },
+
+      updateOrderLines: (orderId, updatedLines) => {
+        setOrders((prev) => prev.map(o => {
+          if (o.id === orderId) {
+            const newTotal = updatedLines.reduce((sum, l) => sum + (l.qty * l.price), 0);
+            return { ...o, lines: updatedLines, total: newTotal };
+          }
+          return o;
+        }));
       },
     };
   }, [
@@ -528,12 +544,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     purchaseBills,
     shops,
     stack,
-    stockMovements,
     switchTab,
     syncEnabled,
     googleEmail,
     transactions,
   ]);
+
+  if (!hydrated) {
+    return <div className="flex h-screen items-center justify-center text-primary">Loading DPAS...</div>;
+  }
 
   return (
     <StoreContext.Provider value={value}>
@@ -544,11 +563,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
 export function useStore() {
   const context = useContext(StoreContext);
-
   if (!context) {
     throw new Error("useStore must be used within StoreProvider");
   }
-
   return context;
 }
 
@@ -558,4 +575,3 @@ export function formatINR(amount: number): string {
     maximumFractionDigits: 2,
   })}`;
 }
-
