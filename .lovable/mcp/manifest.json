@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "sales-helper-pro",
+      "version": "0.1.0",
+      "title": "Sales Helper Pro"
+    },
+    "tools": [
+      {
+        "name": "list_categories",
+        "title": "List categories",
+        "description": "List catalogue categories with the number of products in each.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_products",
+        "title": "List products",
+        "description": "List products from the SalesBeat cosmetics catalogue, optionally filtered by category or a name/code search term.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "search": {
+              "description": "Case-insensitive text matched against product name and code.",
+              "type": "string"
+            },
+            "category": {
+              "description": "Category filter: Eye, Face, Lip, Hair or Nail Care.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Maximum number of products to return (default 50).",
+              "type": "number"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_product",
+        "title": "Get product",
+        "description": "Get full catalogue details for one product by its id or product code, including pricing, unit, shades and stock defaults.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "idOrCode": {
+              "type": "string",
+              "description": "Product id (e.g. p1) or product code (e.g. EGML 6008 DD)."
+            }
+          },
+          "required": [
+            "idOrCode"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
