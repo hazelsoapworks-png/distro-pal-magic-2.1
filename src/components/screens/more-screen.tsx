@@ -38,13 +38,13 @@ export function MoreScreen() {
     const [address, setAddress] = useState(profile.address);
   const googleConnected = googleEmail.trim().length > 0;
 
-  const openDpasFolder = async () => {
+ const openDpasFolder = async () => {
     try {
       const stats = await Filesystem.stat({
-        path: "SalesBeat/data.json",
+        path: "DPAS/data.json", // यहाँ SalesBeat की जगह DPAS करना है
         directory: Directory.Documents,
       });
-      alert(`Folder Found! File size: ${stats.size} bytes. Location: Documents/SalesBeat/data.json`);
+      alert(`Folder Found! File size: ${stats.size} bytes. Location: Documents/DPAS/data.json`);
     } catch (e) {
       alert("No data file found yet. Please perform some action to save data first.");
     }
