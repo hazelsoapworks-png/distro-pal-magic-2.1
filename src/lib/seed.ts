@@ -180,7 +180,7 @@ const seedShops: Shop[] = [
   },
 ];
 
-const seedProducts: Product[] = [
+export const seedProducts: Product[] = [
   {
     id: "p1",
     name: "Matte Lipstick 6008 Mix Square",
