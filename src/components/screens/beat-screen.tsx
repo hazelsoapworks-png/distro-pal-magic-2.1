@@ -20,6 +20,7 @@ export function BeatScreen() {
     duesForBeat,
     navigate,
     goBack,
+    switchTab,
     addBeat,
     renameBeat,
     deleteBeat,
@@ -35,15 +36,21 @@ export function BeatScreen() {
       b.area.toLowerCase().includes(query.toLowerCase()),
   );
 
+  const handleBack = () => {
+    if (!goBack()) {
+      switchTab("home");
+    }
+  };
+
   return (
-    <div className="relative pb-24">
-      <header className="app-safe-top rounded-b-3xl bg-primary px-4 pb-5 text-primary-foreground">
+    <div className="relative pb-24 max-w-7xl mx-auto w-full">
+      <header className="app-safe-top rounded-b-3xl bg-primary px-4 md:px-6 pb-5 text-primary-foreground">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3">
             <button
               type="button"
-              onClick={goBack}
-              className="mt-1 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
+              onClick={handleBack}
+              className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-colors cursor-pointer"
             >
               <ArrowLeft className="size-5" />
             </button>
@@ -59,14 +66,14 @@ export function BeatScreen() {
             type="button"
             onClick={() => setAddOpen(true)}
             aria-label="Add beat"
-            className="flex size-10 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25 cursor-pointer"
           >
             <Plus className="size-5" />
           </button>
         </div>
 
-        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-card px-4 py-3">
-          <Search className="size-5 text-muted-foreground" />
+        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-card px-4 py-3 shadow-sm">
+          <Search className="size-5 text-muted-foreground shrink-0" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -76,7 +83,8 @@ export function BeatScreen() {
         </div>
       </header>
 
-      <div className="space-y-4 px-4 pt-4">
+      {/* Grid Layout for Tablet & Mobile */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 md:px-6 pt-4">
         {filtered.map((b) => {
           const shops = shopsForBeat(b.id);
           const pending = shops.filter((s) => s.status === "pending").length;
@@ -84,46 +92,46 @@ export function BeatScreen() {
             <div
               key={b.id}
               onClick={() => navigate("beatDetail", { beatId: b.id })}
-              className="cursor-pointer rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md"
+              className="flex flex-col justify-between cursor-pointer rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 transition-all hover:shadow-md"
             >
               <div className="flex items-start gap-3">
-                <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-primary">
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-primary">
                   <Map className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-lg font-bold text-foreground">{b.name}</h2>
-                  <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground">
+                  <h2 className="text-lg font-bold text-foreground truncate">{b.name}</h2>
+                  <p className="mt-0.5 flex items-center gap-1 text-sm text-muted-foreground truncate">
                     <MapPin className="size-4 shrink-0" />
-                    {b.area}
+                    <span className="truncate">{b.area}</span>
                   </p>
                 </div>
               
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     onClick={() => setEditBeat({ id: b.id, name: b.name })}
                     aria-label={`Edit ${b.name}`}
-                    className="text-muted-foreground transition-colors hover:text-primary p-1"
+                    className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary hover:bg-primary/10 cursor-pointer"
                   >
-                    <Pencil className="size-5" />
+                    <Pencil className="size-4" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setDeleteBeatItem(b)}
                     aria-label={`Delete ${b.name}`}
-                    className="text-red-500 transition-colors hover:text-red-700 p-1"
+                    className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                   >
-                    <Trash2 className="size-5" />
+                    <Trash2 className="size-4" />
                   </button>
                 </div>
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-surface px-3 py-3 text-center">
-                <Metric label="Total Outlets" value={`${shops.length} Shops`} />
-                <Metric label="Pending Visit" value={`${pending} Pending`} accent="text-primary" />
+                <Metric label="Outlets" value={`${shops.length}`} />
+                <Metric label="Pending" value={`${pending}`} accent="text-primary" />
                 <Metric
-                  label="Outstanding Dues"
+                  label="Dues"
                   value={formatINR(duesForBeat(b.id))}
                   accent="text-warning"
                 />
@@ -132,11 +140,14 @@ export function BeatScreen() {
           );
         })}
         {filtered.length === 0 && (
-          <p className="py-10 text-center text-muted-foreground">No beats match your search.</p>
+          <div className="col-span-full py-10 text-center text-muted-foreground">
+            No beats match your search.
+          </div>
         )}
       </div>
 
       <AddBeatModal open={addOpen} onClose={() => setAddOpen(false)} onAdd={addBeat} />
+      
       <EditBeatModal
         beat={editBeat}
         onClose={() => setEditBeat(null)}
@@ -162,7 +173,7 @@ export function BeatScreen() {
           <button
             type="button"
             onClick={() => setDeleteBeatItem(null)}
-            className="px-4 py-2 font-semibold text-muted-foreground"
+            className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer"
           >
             No
           </button>
@@ -175,7 +186,7 @@ export function BeatScreen() {
               }
               setDeleteBeatItem(null);
             }}
-            className="rounded-full bg-red-600 px-5 py-2 font-semibold text-white"
+            className="rounded-full bg-red-600 px-5 py-2 font-semibold text-white cursor-pointer hover:bg-red-700 transition-colors"
           >
             Yes
           </button>
@@ -196,8 +207,8 @@ function Metric({
 }) {
   return (
     <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-sm font-bold ${accent}`}>{value}</p>
+      <p className="text-xs text-muted-foreground truncate">{label}</p>
+      <p className={`mt-1 text-sm font-bold truncate ${accent}`}>{value}</p>
     </div>
   );
 }
@@ -250,13 +261,13 @@ function AddBeatModal({
         </Field>
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
-        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
+        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer">
           Cancel
         </button>
         <button
           type="button"
           onClick={submit}
-          className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
+          className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground cursor-pointer"
         >
           Add Beat
         </button>
@@ -294,13 +305,13 @@ function EditBeatModal({
         </Field>
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
-        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
+        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer">
           Cancel
         </button>
         <button
           type="button"
           onClick={() => beat && onSave(beat.id, (name || beat.name).trim())}
-          className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
+          className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground cursor-pointer"
         >
           Save
         </button>

@@ -6,10 +6,10 @@ export function DeliveryMenuScreen() {
   const { navigate, pendingOrders, dispatches } = useStore();
 
   return (
-    <div className="pb-6">
+    <div className="pb-6 max-w-7xl mx-auto w-full">
       <AppHeader title="Delivery Management" showBack rounded />
       
-      <div className="px-4 pt-6 space-y-3">
+      <div className="px-4 sm:px-6 pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* 1. Stock Inventory */}
         <MenuButton
           icon={<Package className="size-6 text-teal" />}
@@ -53,14 +53,14 @@ function MenuButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-black/5 transition-transform active:scale-95"
+      className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 sm:p-5 text-left shadow-sm ring-1 ring-black/5 hover:shadow-md transition-all active:scale-95 cursor-pointer"
     >
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface">
+      <div className="flex size-12 sm:size-14 shrink-0 items-center justify-center rounded-full bg-surface">
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <h3 className="font-bold text-foreground">{title}</h3>
-        <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+        <h3 className="font-bold text-foreground text-base sm:text-lg truncate">{title}</h3>
+        <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">{subtitle}</p>
       </div>
       <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
     </button>

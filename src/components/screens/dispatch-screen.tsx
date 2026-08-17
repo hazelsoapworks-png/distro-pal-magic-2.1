@@ -24,7 +24,7 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
 
   if (!order) {
     return (
-      <div className="pb-6">
+      <div className="pb-6 max-w-7xl mx-auto w-full">
         <AppHeader title="Dispatch" subtitle="Order not found" showBack rounded />
         <p className="px-4 py-10 text-center text-muted-foreground">This order is no longer available.</p>
       </div>
@@ -78,61 +78,65 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
   };
 
   return (
-    <div className="pb-48">
+    <div className="pb-48 max-w-7xl mx-auto w-full">
       <AppHeader title="Dispatch Order" subtitle={`${order.shopName} • ${order.beatName}`} showBack rounded />
 
-      <div className="px-4 pt-4">
-        <div className="grid grid-cols-2 gap-3">
-          <label className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-black/5">
-            <span className="text-xs text-muted-foreground">Executive</span>
+      <div className="px-4 sm:px-6 pt-4">
+        {/* Top Info Inputs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <label className="rounded-2xl bg-card p-3 sm:p-4 shadow-sm ring-1 ring-black/5 flex flex-col">
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Executive</span>
             <input
               value={executive}
               onChange={(e) => setExecutive(e.target.value)}
-              className="mt-1 w-full bg-transparent text-sm font-semibold text-foreground outline-none"
+              className="mt-1.5 w-full bg-transparent text-sm sm:text-base font-semibold text-foreground outline-none"
             />
           </label>
-          <label className="rounded-2xl bg-card p-3 shadow-sm ring-1 ring-black/5">
-            <span className="text-xs text-muted-foreground">Vehicle</span>
+          <label className="rounded-2xl bg-card p-3 sm:p-4 shadow-sm ring-1 ring-black/5 flex flex-col">
+            <span className="text-xs sm:text-sm font-medium text-muted-foreground">Vehicle</span>
             <input
               value={vehicle}
               onChange={(e) => setVehicle(e.target.value)}
               placeholder="MH12 AB 1234"
-              className="mt-1 w-full bg-transparent text-sm font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
+              className="mt-1.5 w-full bg-transparent text-sm sm:text-base font-semibold text-foreground outline-none placeholder:font-normal placeholder:text-muted-foreground"
             />
           </label>
         </div>
 
-        <h2 className="mb-2 mt-5 text-lg font-bold text-foreground">Dispatch Checklist</h2>
-        <div className="space-y-3">
+        <h2 className="mb-3 mt-6 sm:mt-8 text-lg sm:text-xl font-bold text-foreground">Dispatch Checklist</h2>
+        
+        {/* Checklist Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
           {pendingLines.map((l) => {
             const p = products.find((x) => x.id === l.productId);
             const stock = stockFor(l.productId);
             const d = dispatchQtyOf(l);
             const remaining = l.pendingQty - d;
             return (
-              <div key={l.productId} className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
-                <div className="flex items-start gap-3">
-                  <ProductThumb src={p?.imageUrl} name={p?.name ?? "Item"} className="size-[56px]" />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">{p?.name ?? "Item"}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {p?.code} • {formatINR(l.price)} / {p?.unit ?? "Pcs"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      Available Stock: <span className="font-semibold text-foreground">{stock.available}</span> •
-                      Remaining Stock after dispatch:{" "}
-                      <span className="font-semibold text-foreground">{Math.max(0, stock.available - d)}</span>
-                    </p>
+              <div key={l.productId} className="flex flex-col justify-between rounded-2xl bg-card p-4 sm:p-5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
+                <div>
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <ProductThumb src={p?.imageUrl} name={p?.name ?? "Item"} className="size-[56px] sm:size-[64px] shrink-0" />
+                    <div className="min-w-0 flex-1 pr-1">
+                      <p className="font-semibold text-foreground text-base truncate">{p?.name ?? "Item"}</p>
+                      <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">
+                        {p?.code} • {formatINR(l.price)} / {p?.unit ?? "Pcs"}
+                      </p>
+                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                        Available Stock: <span className="font-semibold text-foreground">{stock.available}</span> • 
+                        Remaining: <span className="font-semibold text-foreground">{Math.max(0, stock.available - d)}</span>
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-3 items-center gap-2 rounded-xl bg-surface p-2 text-center">
+                <div className="mt-4 pt-3 border-t border-black/5 grid grid-cols-3 items-center gap-2 rounded-xl bg-surface p-2 sm:p-3 text-center">
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Ordered</p>
-                    <p className="text-base font-bold text-foreground">{l.pendingQty}</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">Ordered</p>
+                    <p className="mt-0.5 text-base sm:text-lg font-bold text-foreground">{l.pendingQty}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Dispatch</p>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">Dispatch</p>
                     <input
                       inputMode="numeric"
                       value={d}
@@ -140,12 +144,12 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
                         setValue(l.productId, l.pendingQty, Number(e.target.value.replace(/\D/g, "")) || 0)
                       }
                       aria-label={`Dispatch quantity for ${p?.name ?? "item"}`}
-                      className="mx-auto mt-0.5 h-8 w-16 rounded-lg bg-card text-center text-base font-bold text-primary outline-none ring-1 ring-black/5 focus:ring-primary/40"
+                      className="mx-auto mt-1 h-8 sm:h-9 w-16 sm:w-20 rounded-lg bg-card text-center text-base sm:text-lg font-bold text-primary outline-none ring-1 ring-black/5 focus:ring-primary/40 transition-shadow"
                     />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Remaining</p>
-                    <p className={`text-base font-bold ${remaining > 0 ? "text-warning" : "text-success"}`}>
+                    <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground">Remaining</p>
+                    <p className={`mt-0.5 text-base sm:text-lg font-bold ${remaining > 0 ? "text-warning" : "text-success"}`}>
                       {remaining}
                     </p>
                   </div>
@@ -154,37 +158,38 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
             );
           })}
           {pendingLines.length === 0 && (
-            <p className="rounded-xl bg-card p-4 text-center text-sm text-muted-foreground shadow-sm ring-1 ring-black/5">
+            <div className="col-span-full rounded-xl bg-card p-4 sm:p-6 text-center text-sm text-muted-foreground shadow-sm ring-1 ring-black/5">
               Nothing left to dispatch on this order.
-            </p>
+            </div>
           )}
         </div>
       </div>
 
+      {/* Floating Bottom Bar */}
       {pendingLines.length > 0 && (
-        <div className="fixed inset-x-0 bottom-[4.5rem] z-30 mx-auto max-w-md px-4">
-          <div className="rounded-2xl bg-card p-3 shadow-lg ring-1 ring-black/5">
+        <div className="fixed inset-x-0 bottom-[4.5rem] z-30 mx-auto max-w-2xl px-4 sm:px-6 pointer-events-none">
+          <div className="rounded-2xl bg-card p-4 shadow-xl ring-1 ring-black/10 pointer-events-auto">
             <div className="grid grid-cols-3 gap-2 text-center">
               <Summary label="Ordered" value={totals.ordered} />
               <Summary label="Dispatched" value={totals.dispatched} tone="text-primary" />
               <Summary label="Remaining" value={totals.remaining} tone="text-warning" />
             </div>
-            <div className="mt-2 flex items-center justify-between gap-3 border-t border-black/5 pt-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Total Dispatch Value</p>
-                <p className="text-lg font-bold text-foreground">{formatINR(totals.value)}</p>
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-black/5 pt-3">
+              <div className="min-w-0 pr-2">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Dispatch Value</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground truncate">{formatINR(totals.value)}</p>
               </div>
               <button
                 type="button"
                 onClick={submit}
                 disabled={totals.dispatched === 0}
-                className="flex items-center gap-2 rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground disabled:opacity-40"
+                className="flex items-center shrink-0 gap-2 rounded-xl bg-primary px-5 py-3 sm:py-3.5 font-semibold text-primary-foreground disabled:opacity-40 cursor-pointer hover:bg-primary/90 transition-colors"
               >
                 {fully ? <PackageCheck className="size-5" /> : <Boxes className="size-5" />}
                 Confirm Dispatch
               </button>
             </div>
-            <p className="mt-1 text-center text-xs text-muted-foreground">
+            <p className="mt-2 text-center text-xs sm:text-sm text-muted-foreground">
               {totals.dispatched === 0
                 ? "Enter dispatch quantities to continue"
                 : fully
@@ -205,14 +210,14 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
           What would you like to do with the remaining <span className="font-semibold text-warning">{totals.remaining}</span> items?
         </p>
         
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+        <div className="mt-6 flex flex-col sm:flex-row sm:justify-end gap-3">
           <button 
             type="button"
             onClick={() => {
               setShowActionModal(false);
               performDispatch("cancel");
             }} 
-            className="rounded-xl border border-black/10 px-4 py-2.5 font-semibold text-muted-foreground hover:bg-black/5"
+            className="rounded-xl border border-black/10 px-4 py-2.5 font-semibold text-muted-foreground hover:bg-black/5 transition-colors cursor-pointer"
           >
             Cancel Remaining
           </button>
@@ -222,7 +227,7 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
               setShowActionModal(false);
               performDispatch("backorder");
             }} 
-            className="rounded-xl bg-primary px-6 py-2.5 font-semibold text-primary-foreground shadow-sm"
+            className="rounded-xl bg-primary px-6 py-2.5 font-semibold text-primary-foreground shadow-sm hover:opacity-90 transition-opacity cursor-pointer"
           >
             Keep Pending
           </button>
@@ -234,9 +239,9 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
 
 function Summary({ label, value, tone = "text-foreground" }: { label: string; value: number; tone?: string }) {
   return (
-    <div>
-      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={`text-base font-bold ${tone}`}>{value}</p>
+    <div className="flex flex-col items-center">
+      <p className="text-[10px] sm:text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{label}</p>
+      <p className={`mt-0.5 text-base sm:text-lg font-bold ${tone}`}>{value}</p>
     </div>
   );
 }

@@ -27,7 +27,7 @@ export function ProductsScreen() {
   };
 
   return (
-    <div className="pb-6">
+    <div className="pb-6 max-w-7xl mx-auto w-full">
       <AppHeader
         title="Product Catalogue"
         subtitle={`${products.length} products listed`}
@@ -38,46 +38,46 @@ export function ProductsScreen() {
             type="button"
             onClick={openAdd}
             aria-label="Add product"
-            className="flex size-10 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25 cursor-pointer"
           >
             <Plus className="size-5" />
           </button>
         }
       />
 
-      <div className="space-y-3 px-4 pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 px-4 sm:px-6 pt-4">
         {products.map((p) => {
           const margin = p.sellingPrice - p.buyingPrice;
           return (
-            <div key={p.id} className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
-              <div className="flex items-start gap-3">
+            <div key={p.id} className="flex flex-col justify-between rounded-2xl bg-card p-4 sm:p-5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3 sm:gap-4">
                 <ProductThumb src={p.imageUrl} name={p.name} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-foreground">{p.name}</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1 pr-1">
+                  <p className="font-bold text-foreground text-base sm:text-lg truncate">{p.name}</p>
+                  <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">
                     Code: {p.code} • per {p.unit}
                   </p>
                   {(p.category || p.hasVariants) && (
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                       {p.category && (
-                        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-primary">
+                        <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-[10px] sm:text-xs font-medium text-primary">
                           {p.category}
                         </span>
                       )}
                       {p.hasVariants && (
-                        <span className="rounded-full bg-warning/15 px-2 py-0.5 text-xs font-medium text-warning">
+                        <span className="rounded-full bg-warning/15 px-2.5 py-0.5 text-[10px] sm:text-xs font-medium text-warning">
                           {p.shades && p.shades.length > 0 ? `${p.shades.length} shades` : "Shades"}
                         </span>
                       )}
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
                     onClick={() => openEdit(p)}
                     aria-label={`Edit ${p.name}`}
-                    className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-primary"
+                    className="flex size-8 sm:size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-black/5 hover:text-primary cursor-pointer"
                   >
                     <Pencil className="size-4" />
                   </button>
@@ -85,30 +85,30 @@ export function ProductsScreen() {
                     type="button"
                     onClick={() => setProductToDelete(p)}
                     aria-label={`Delete ${p.name}`}
-                    className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-destructive"
+                    className="flex size-8 sm:size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer"
                   >
                     <Trash2 className="size-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="mt-3 flex items-center justify-between rounded-xl bg-surface px-3.5 py-2.5">
-                <div>
-                  <p className="text-xs text-muted-foreground">Selling Price</p>
-                  <p className="text-lg font-bold text-primary">{formatINR(p.sellingPrice)}</p>
+              <div className="mt-4 sm:mt-5 flex items-center justify-between rounded-xl bg-surface px-3.5 py-3">
+                <div className="min-w-0 pr-2">
+                  <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground font-medium">Selling Price</p>
+                  <p className="mt-0.5 text-lg sm:text-xl font-bold text-primary truncate">{formatINR(p.sellingPrice)}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Margin</p>
-                  <p className="font-semibold text-success">{formatINR(margin)}</p>
+                <div className="text-right shrink-0">
+                  <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground font-medium">Margin</p>
+                  <p className="mt-0.5 text-sm sm:text-base font-semibold text-success">{formatINR(margin)}</p>
                 </div>
               </div>
             </div>
           );
         })}
         {products.length === 0 && (
-          <p className="py-10 text-center text-muted-foreground">
+          <div className="col-span-full py-10 text-center text-muted-foreground">
             No products yet. Tap + to add one.
-          </p>
+          </div>
         )}
       </div>
 
@@ -125,15 +125,15 @@ export function ProductsScreen() {
 
       {/* Delete Confirmation Modal */}
       <Modal open={productToDelete !== null} onClose={() => setProductToDelete(null)}>
-        <h3 className="text-xl font-bold text-foreground">Delete Product</h3>
-        <p className="mt-2 text-muted-foreground">
+        <h3 className="text-xl sm:text-2xl font-bold text-foreground">Delete Product</h3>
+        <p className="mt-3 text-sm sm:text-base text-muted-foreground">
           Are you sure you want to delete <span className="font-semibold text-foreground">{productToDelete?.name}</span>?
         </p>
         <div className="mt-6 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={() => setProductToDelete(null)}
-            className="px-4 py-2 font-semibold text-muted-foreground"
+            className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer hover:bg-black/5 rounded-xl transition-colors"
           >
             Cancel
           </button>
@@ -145,7 +145,7 @@ export function ProductsScreen() {
                 setProductToDelete(null);
               }
             }}
-            className="rounded-full bg-red-500 px-6 py-2.5 font-semibold text-white"
+            className="rounded-full bg-red-500 px-6 py-2.5 font-semibold text-white cursor-pointer hover:bg-red-600 transition-colors"
           >
             Delete
           </button>
@@ -157,7 +157,7 @@ export function ProductsScreen() {
 
 function ProductThumb({ src, name }: { src?: string; name: string }) {
   const base =
-    "flex size-[65px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-soft";
+    "flex size-[64px] sm:size-[72px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-soft";
   if (src) {
     return (
       <div className={base}>
@@ -167,7 +167,7 @@ function ProductThumb({ src, name }: { src?: string; name: string }) {
   }
   return (
     <div className={base}>
-      <Camera className="size-6 text-primary/60" />
+      <Camera className="size-6 sm:size-7 text-primary/60" />
     </div>
   );
 }
@@ -248,15 +248,15 @@ function ProductFormModal({
 
   return (
     <Modal open={open} onClose={onClose}>
-      <h3 className="text-xl font-bold text-foreground">
+      <h3 className="text-xl sm:text-2xl font-bold text-foreground">
         {product ? "Edit Product" : "Add Product"}
       </h3>
-      <div className="mt-4 max-h-[62vh] space-y-3 overflow-y-auto pr-1">
+      <div className="mt-4 sm:mt-5 max-h-[60vh] sm:max-h-[65vh] space-y-3 sm:space-y-4 overflow-y-auto pr-1">
         {/* Image upload */}
         <div>
           <span className="mb-1.5 block text-sm font-medium text-foreground">Product Image</span>
-          <div className="flex items-center gap-3">
-            <div className="relative flex size-20 items-center justify-center overflow-hidden rounded-xl bg-surface ring-1 ring-black/5">
+          <div className="flex items-center gap-4">
+            <div className="relative flex size-20 sm:size-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface ring-1 ring-black/5">
               {imageUrl ? (
                 <>
                   <img src={imageUrl} alt="Preview" className="size-full object-cover" />
@@ -264,20 +264,20 @@ function ProductFormModal({
                     type="button"
                     onClick={() => setImageUrl(undefined)}
                     aria-label="Remove image"
-                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-black/60 text-white"
+                    className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-black/60 text-white cursor-pointer hover:bg-black/80 transition-colors"
                   >
                     <X className="size-3" />
                   </button>
                 </>
               ) : (
-                <Camera className="size-6 text-muted-foreground" />
+                <Camera className="size-6 sm:size-8 text-muted-foreground" />
               )}
             </div>
             <div className="flex flex-1 flex-col gap-2">
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="rounded-xl bg-brand-soft px-3 py-2 text-sm font-semibold text-primary"
+                className="rounded-xl bg-brand-soft px-3 py-2 sm:py-2.5 text-sm font-semibold text-primary cursor-pointer hover:bg-primary/10 transition-colors"
               >
                 {imageUrl ? "Change photo" : "Upload photo"}
               </button>
@@ -299,7 +299,7 @@ function ProductFormModal({
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as ProductCategory | "")}
-            className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+            className="w-full rounded-xl bg-surface px-3.5 py-3 sm:py-3.5 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40 cursor-pointer"
           >
             <option value="">Select category</option>
             {PRODUCT_CATEGORIES.map((c) => (
@@ -319,7 +319,7 @@ function ProductFormModal({
           <select
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+            className="w-full rounded-xl bg-surface px-3.5 py-3 sm:py-3.5 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40 cursor-pointer"
           >
             {PRODUCT_UNITS.map((u) => (
               <option key={u} value={u}>
@@ -329,71 +329,72 @@ function ProductFormModal({
           </select>
         </label>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <FormRow label="Cost / Buying (₹)" value={buying} onChange={setBuying} placeholder="0" type="number" />
           <FormRow label="Selling / MRP (₹)" value={selling} onChange={setSelling} placeholder="0" type="number" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           <FormRow label="Opening Stock" value={opening} onChange={setOpening} placeholder="0" type="number" />
           <FormRow label="Low Stock Alert" value={threshold} onChange={setThreshold} placeholder="0" type="number" />
         </div>
 
         {/* Variants toggle */}
-        <div className="rounded-xl bg-surface p-3.5">
+        <div className="rounded-xl bg-surface p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-foreground">Has Shades / Variants?</p>
-              <p className="text-xs text-muted-foreground">Enable for cosmetics shades or numbers</p>
+            <div className="pr-2">
+              <p className="text-sm sm:text-base font-medium text-foreground">Has Shades / Variants?</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Enable for cosmetics shades or numbers</p>
             </div>
             <button
               type="button"
               role="switch"
               aria-checked={hasVariants}
               onClick={() => setHasVariants((v) => !v)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${
+              className={`relative h-7 w-12 sm:h-8 sm:w-14 shrink-0 rounded-full transition-colors cursor-pointer ${
                 hasVariants ? "bg-primary" : "bg-muted-foreground/30"
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${
-                  hasVariants ? "translate-x-5" : "translate-x-0"
+                className={`absolute top-1 sm:top-1.5 size-5 rounded-full bg-white shadow transition-transform ${
+                  hasVariants ? "translate-x-6 sm:translate-x-8" : "translate-x-1 sm:translate-x-1.5"
                 }`}
               />
             </button>
           </div>
 
           {hasVariants && (
-            <div className="mt-3 space-y-2">
-              <div className="flex gap-2">
+            <div className="mt-4 space-y-3">
+              <div className="flex gap-2 sm:gap-3">
                 <input
                   value={shadeInput}
                   onChange={(e) => setShadeInput(e.target.value)}
                   placeholder="e.g. Shade 01, Natural Beige"
-                  className="flex-1 rounded-lg bg-card px-3 py-2 text-sm outline-none ring-1 ring-black/5 focus:ring-primary/40"
+                  className="flex-1 rounded-xl bg-card px-3.5 py-2.5 sm:py-3 text-sm sm:text-base outline-none ring-1 ring-black/5 focus:ring-primary/40"
                 />
                 <button
                   type="button"
                   onClick={addShade}
-                  className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+                  className="rounded-xl bg-primary px-4 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-primary-foreground cursor-pointer hover:opacity-90 transition-opacity"
                 >
                   Add
                 </button>
               </div>
               {shades.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2">
                   {shades.map((s, i) => (
                     <span
                       key={`${s}-${i}`}
-                      className="flex items-center gap-1 rounded-full bg-brand-soft px-2.5 py-1 text-xs font-medium text-primary"
+                      className="flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1.5 text-xs sm:text-sm font-medium text-primary"
                     >
                       {s}
                       <button
                         type="button"
                         onClick={() => setShades((prev) => prev.filter((_, idx) => idx !== i))}
                         aria-label={`Remove ${s}`}
+                        className="cursor-pointer hover:text-primary/70 transition-colors"
                       >
-                        <X className="size-3" />
+                        <X className="size-3.5 sm:size-4" />
                       </button>
                     </span>
                   ))}
@@ -403,14 +404,14 @@ function ProductFormModal({
           )}
         </div>
       </div>
-      <div className="mt-6 flex items-center justify-end gap-3">
-        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
+      <div className="mt-6 flex items-center justify-end gap-3 sm:gap-4 border-t border-black/5 pt-4 sm:pt-5">
+        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer hover:bg-black/5 rounded-xl transition-colors">
           Cancel
         </button>
         <button
           type="button"
           onClick={submit}
-          className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
+          className="rounded-full bg-primary px-6 py-2.5 sm:py-3 font-semibold text-primary-foreground cursor-pointer hover:opacity-90 transition-opacity"
         >
           {product ? "Save Changes" : "Add Product"}
         </button>
@@ -441,7 +442,7 @@ function FormRow({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40 placeholder:text-muted-foreground"
+        className="w-full rounded-xl bg-surface px-3.5 py-3 sm:py-3.5 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40 placeholder:text-muted-foreground"
       />
     </label>
   );

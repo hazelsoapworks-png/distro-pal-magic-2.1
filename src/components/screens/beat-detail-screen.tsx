@@ -83,7 +83,7 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
   };
 
   return (
-    <div className="pb-6">
+    <div className="pb-6 max-w-7xl mx-auto w-full">
       <AppHeader
         title={`${beat.name} Beat`}
         subtitle={`${beat.area} • ${shops.length} Outlets`}
@@ -94,7 +94,7 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
               aria-label="Beat options"
-              className="flex size-9 items-center justify-center rounded-full transition-colors hover:bg-white/15"
+              className="flex size-9 items-center justify-center rounded-full transition-colors hover:bg-white/15 cursor-pointer"
             >
               <MoreVertical className="size-6" />
             </button>
@@ -135,9 +135,9 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
       />
 
       {/* Search Bar */}
-      <div className="bg-card px-4 py-3 border-b border-black/5">
+      <div className="bg-card px-4 sm:px-6 py-3 border-b border-black/5">
         <div className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2.5">
-          <Search className="size-5 text-muted-foreground" />
+          <Search className="size-5 text-muted-foreground shrink-0" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -147,7 +147,7 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between bg-brand-soft px-4 py-3">
+      <div className="flex items-center justify-between bg-brand-soft px-4 sm:px-6 py-3">
         <div>
           <p className="text-xs text-muted-foreground">Visits Progress</p>
           <p className="font-bold text-primary">
@@ -160,13 +160,13 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
         </div>
       </div>
 
-      <div className="flex gap-5 overflow-x-auto border-b border-black/5 bg-card px-4">
+      <div className="flex gap-5 overflow-x-auto border-b border-black/5 bg-card px-4 sm:px-6">
         {tabs.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`shrink-0 border-b-2 py-3 text-sm font-semibold transition-colors ${
+            className={`shrink-0 border-b-2 py-3 text-sm font-semibold transition-colors cursor-pointer ${
               tab === t.key
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground"
@@ -178,121 +178,133 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
       </div>
 
       {deleteMode && (
-        <div className="mx-4 mt-4 flex items-center justify-between rounded-xl bg-warning-soft px-4 py-2.5 text-sm text-warning">
+        <div className="mx-4 sm:mx-6 mt-4 flex items-center justify-between rounded-xl bg-warning-soft px-4 py-2.5 text-sm text-warning">
           <span>Tap the trash icon on a shop to delete it.</span>
-          <button type="button" onClick={() => setDeleteMode(false)} aria-label="Exit delete mode">
+          <button type="button" onClick={() => setDeleteMode(false)} aria-label="Exit delete mode" className="cursor-pointer p-1">
             <X className="size-4" />
           </button>
         </div>
       )}
 
-      <div className="space-y-4 px-4 pt-4">
+      {/* Grid Layout Starts Here */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-4 sm:px-6 pt-4">
         {filtered.map((shop) => {
           const meta = STATUS_META[shop.status];
           return (
-            <div key={shop.id} className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-lg font-bold text-foreground">{shop.name}</h2>
-                <div className="flex flex-col items-end gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${meta.cls}`}>
-                      {meta.label}
+            <div key={shop.id} className="flex flex-col justify-between rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
+              
+              {/* Top Section */}
+              <div>
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-lg font-bold text-foreground truncate pr-2">{shop.name}</h2>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${meta.cls}`}>
+                        {meta.label}
+                      </span>
+                      {deleteMode && (
+                        <button
+                          type="button"
+                          onClick={() => deleteShop(shop.id)}
+                          className="flex size-8 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 cursor-pointer transition-colors"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-medium text-muted-foreground">
+                      Last Order: {shop.lastOrderDate || "Never"}
                     </span>
-                    {deleteMode && (
-                      <button
-                        type="button"
-                        onClick={() => deleteShop(shop.id)}
-                        className="flex size-8 items-center justify-center rounded-full bg-destructive/10 text-destructive"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    )}
                   </div>
-                  <span className="text-[10px] font-medium text-muted-foreground">
-                    Last Order: {shop.lastOrderDate || "Never"}
-                  </span>
                 </div>
+
+                {/* Clickable Map Address */}
+                <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
+                  <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <a 
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.address)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline text-primary line-clamp-2"
+                  >
+                    {shop.address.includes("http") ? "View Location on Map" : shop.address}
+                  </a>
+                </p>
+
+                <p className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="size-4 shrink-0" />
+                  <a href={`tel:${shop.phone.replace(/\s/g, "")}`} className="hover:underline">
+                    {shop.phone}
+                  </a>
+                </p>
+
+                <p 
+                  className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-success transition-colors w-fit"
+                  onClick={() => sendWhatsApp(shop.whatsapp || shop.phone, "Hello, regarding your store order")}
+                >
+                  <MessageCircle className="size-4 shrink-0 text-success" />
+                  {shop.whatsapp || shop.phone}
+                </p>
               </div>
 
-              {/* Clickable Map Address */}
-              <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-                <a 
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.address)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:underline text-primary"
-                >
-                  {shop.address.includes("http") ? "View Location on Map" : shop.address}
-                </a>
-              </p>
-
-              <p className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="size-4 shrink-0" />
-                <a href={`tel:${shop.phone.replace(/\s/g, "")}`} className="hover:underline">
-                  {shop.phone}
-                </a>
-              </p>
-
-              <p 
-                className="mt-1.5 flex items-center gap-2 text-sm text-muted-foreground cursor-pointer hover:text-success transition-colors"
-                onClick={() => sendWhatsApp(shop.whatsapp || shop.phone, "Hello, regarding your store order")}
-              >
-                <MessageCircle className="size-4 shrink-0 text-success" />
-                {shop.whatsapp || shop.phone}
-              </p>
-
-              <div className="mt-3 rounded-xl bg-surface p-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Current Outstanding Dues</p>
-                    <p className="mt-0.5 text-lg font-bold text-warning">
-                      {formatINR(shop.dues)}
-                    </p>
+              {/* Bottom Section */}
+              <div className="mt-4 pt-2 border-t border-black/5">
+                <div className="rounded-xl bg-surface p-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Current Outstanding</p>
+                      <p className="mt-0.5 text-lg font-bold text-warning">
+                        {formatINR(shop.dues)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {shop.status === "ordered" && shop.orderAmount != null && (
+                        <span className="block text-sm font-semibold text-primary">
+                          Order: {formatINR(shop.orderAmount)}
+                        </span>
+                      )}
+                      {shop.status === "paid" && shop.paidAmount != null && (
+                        <span className="block text-sm font-semibold text-success">
+                          Paid: {formatINR(shop.paidAmount)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  {shop.status === "ordered" && shop.orderAmount != null && (
-                    <span className="text-sm font-semibold text-primary">
-                      Order: {formatINR(shop.orderAmount)}
-                    </span>
-                  )}
-                  {shop.status === "paid" && shop.paidAmount != null && (
-                    <span className="text-sm font-semibold text-success">
-                      Paid: {formatINR(shop.paidAmount)}
-                    </span>
-                  )}
                 </div>
-              </div>
 
-              <div className="mt-3 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => navigate("orderBooking", { shopId: shop.id, beatId: beat.id })}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground"
-                >
-                  <Receipt className="size-5" />
-                  Order
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCollectShop({ id: shop.id, name: shop.name, dues: shop.dues })}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-success py-3 font-semibold text-white"
-                >
-                  <Banknote className="size-5" />
-                  Collect
-                </button>
-                <a
-                  href={`tel:${shop.phone.replace(/\s/g, "")}`}
-                  className="flex size-12 items-center justify-center rounded-xl border border-black/10 bg-card text-primary"
-                >
-                  <Phone className="size-5" />
-                </a>
+                <div className="mt-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigate("orderBooking", { shopId: shop.id, beatId: beat.id })}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer"
+                  >
+                    <Receipt className="size-5" />
+                    Order
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCollectShop({ id: shop.id, name: shop.name, dues: shop.dues })}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-success py-3 font-semibold text-white hover:bg-emerald-600 transition-colors cursor-pointer"
+                  >
+                    <Banknote className="size-5" />
+                    Collect
+                  </button>
+                  <a
+                    href={`tel:${shop.phone.replace(/\s/g, "")}`}
+                    className="flex size-12 items-center justify-center rounded-xl border border-black/10 bg-card text-primary hover:bg-surface transition-colors cursor-pointer"
+                  >
+                    <Phone className="size-5" />
+                  </a>
+                </div>
               </div>
             </div>
           );
         })}
 
         {filtered.length === 0 && (
-          <p className="py-10 text-center text-muted-foreground">No outlets in this list.</p>
+          <div className="col-span-full py-10 text-center text-muted-foreground">
+            No outlets in this list.
+          </div>
         )}
       </div>
 
@@ -343,7 +355,7 @@ function MenuItem({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface"
+      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface cursor-pointer"
     >
       {icon}
       <span className={`font-medium ${danger ? "text-destructive" : "text-foreground"}`}>{label}</span>
@@ -385,7 +397,7 @@ function LabeledInput({
           <button
             type="button"
             onClick={onAction}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-black/5 rounded-full transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary hover:bg-black/5 rounded-full transition-colors cursor-pointer"
             title="Get Current Location"
           >
             {actionIcon}
@@ -455,10 +467,10 @@ function AddShopModal({ open, onClose, onAdd }: { open: boolean; onClose: () => 
         <LabeledInput label="Opening Dues (₹)" value={dues} onChange={setDues} placeholder="0" type="number" />
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
-        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
+        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer">
           Cancel
         </button>
-        <button type="button" onClick={submit} className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground">
+        <button type="button" onClick={submit} className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground cursor-pointer">
           Add Shop
         </button>
       </div>
@@ -476,10 +488,10 @@ function RenameBeatModal({ open, current, onClose, onSave }: { open: boolean; cu
         <LabeledInput label="Beat Name" value={name} onChange={setName} placeholder="Enter beat name" />
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
-        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
+        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer">
           Cancel
         </button>
-        <button type="button" onClick={() => onSave((name || current).trim())} className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground">
+        <button type="button" onClick={() => onSave((name || current).trim())} className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground cursor-pointer">
           Save
         </button>
       </div>
@@ -520,10 +532,10 @@ function CollectModal({
                 key={m}
                 type="button"
                 onClick={() => setMode(m)}
-                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold ${
+                className={`flex-1 rounded-xl py-2.5 text-sm font-semibold cursor-pointer transition-colors ${
                   mode === m
                     ? "bg-primary text-primary-foreground"
-                    : "bg-surface text-muted-foreground"
+                    : "bg-surface text-muted-foreground hover:bg-black/5"
                 }`}
               >
                 {m}
@@ -533,7 +545,7 @@ function CollectModal({
         </div>
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
-        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground">
+        <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer">
           Cancel
         </button>
         <button
@@ -554,7 +566,7 @@ function CollectModal({
               }
             }
           }}
-          className="rounded-full bg-success px-6 py-2.5 font-semibold text-white"
+          className="rounded-full bg-success px-6 py-2.5 font-semibold text-white cursor-pointer hover:bg-emerald-600 transition-colors"
         >
           Record Collection
         </button>

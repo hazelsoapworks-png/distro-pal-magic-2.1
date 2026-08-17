@@ -20,25 +20,25 @@ import { signInWithGoogle, signOutGoogle } from "@/lib/google";
 
 export function MoreScreen() {
   const {
-  profile,
-  updateProfile,
-  syncEnabled,
-  setSyncEnabled,
-  googleEmail,
-  setGoogleEmail,
-  dailyTarget,
-  setDailyTarget,
-} = useStore();
+    profile,
+    updateProfile,
+    syncEnabled,
+    setSyncEnabled,
+    googleEmail,
+    setGoogleEmail,
+    dailyTarget,
+    setDailyTarget,
+  } = useStore();
   const [targetOpen, setTargetOpen] = useState(false);
   const [targetValue, setTargetValue] = useState(String(dailyTarget));
   const [profileOpen, setProfileOpen] = useState(false);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
-    const [address, setAddress] = useState(profile.address);
+  const [address, setAddress] = useState(profile.address);
   const googleConnected = googleEmail.trim().length > 0;
 
- const openDpasFolder = async () => {
+  const openDpasFolder = async () => {
     try {
       const stats = await Filesystem.stat({
         path: "DPAS/data.json", // यहाँ SalesBeat की जगह DPAS करना है
@@ -50,11 +50,11 @@ export function MoreScreen() {
     }
   };
 
-const googleSubtitle = useMemo(() => {
-  return googleConnected
-    ? googleEmail
-    : "Tap to Sign in with Google";
-}, [googleConnected, googleEmail]);
+  const googleSubtitle = useMemo(() => {
+    return googleConnected
+      ? googleEmail
+      : "Tap to Sign in with Google";
+  }, [googleConnected, googleEmail]);
 
   const openProfile = () => {
     setName(profile.name);
@@ -70,43 +70,43 @@ const googleSubtitle = useMemo(() => {
   };
 
   return (
-    <div className="pb-6">
+    <div className="pb-6 max-w-7xl mx-auto w-full">
       <AppHeader title="Executive Settings & Profile" rounded />
 
-      <div className="px-4 pt-4">
-        {/* Profile */}
-        <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
-          <div className="flex items-center gap-4">
-            <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-brand-soft text-primary">
-              <UserRound className="size-8" />
+      <div className="px-4 sm:px-6 pt-4">
+        {/* Profile Card */}
+        <div className="rounded-2xl bg-card p-4 sm:p-6 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <span className="flex size-16 sm:size-20 shrink-0 items-center justify-center rounded-full bg-brand-soft text-primary">
+              <UserRound className="size-8 sm:size-10" />
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-lg font-bold text-foreground">{profile.name}</p>
-              <p className="text-sm text-muted-foreground">{profile.role}</p>
-              <p className="mt-0.5 text-sm font-medium text-primary">{profile.zone}</p>
+            <div className="min-w-0 flex-1 pr-2">
+              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{profile.name}</p>
+              <p className="text-sm sm:text-base text-muted-foreground truncate">{profile.role}</p>
+              <p className="mt-0.5 text-sm sm:text-base font-medium text-primary truncate">{profile.zone}</p>
             </div>
             <button
               type="button"
               onClick={openProfile}
               aria-label="Edit profile"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface text-primary"
+              className="flex size-9 sm:size-10 shrink-0 items-center justify-center rounded-full bg-surface text-primary cursor-pointer hover:bg-black/5 transition-colors"
             >
-              <Pencil className="size-4" />
+              <Pencil className="size-4 sm:size-5" />
             </button>
           </div>
 
           {(profile.phone || profile.address) && (
-            <div className="mt-3 space-y-1.5 border-t border-black/5 pt-3">
+            <div className="mt-4 sm:mt-5 space-y-2 border-t border-black/5 pt-4">
               {profile.phone && (
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <p className="flex items-center gap-2.5 text-sm sm:text-base text-muted-foreground">
                   <Phone className="size-4 shrink-0 text-primary" />
-                  {profile.phone}
+                  <span className="truncate">{profile.phone}</span>
                 </p>
               )}
               {profile.address && (
-                <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                <p className="flex items-start gap-2.5 text-sm sm:text-base text-muted-foreground">
                   <MapPin className="mt-0.5 size-4 shrink-0 text-primary" />
-                  {profile.address}
+                  <span className="line-clamp-2">{profile.address}</span>
                 </p>
               )}
             </div>
@@ -114,13 +114,13 @@ const googleSubtitle = useMemo(() => {
         </div>
 
         {/* Sync toggle */}
-        <div className="mt-3 flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5">
-          <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-primary">
-            <RefreshCcw className="size-5" />
+        <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-4 rounded-2xl bg-card p-4 sm:p-5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
+          <span className="flex size-11 sm:size-12 items-center justify-center rounded-full bg-brand-soft text-primary shrink-0">
+            <RefreshCcw className="size-5 sm:size-6" />
           </span>
-          <div className="flex-1">
-            <p className="font-semibold text-foreground">Real-Time Data Sync</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="flex-1 min-w-0 pr-2">
+            <p className="font-semibold text-foreground text-base sm:text-lg truncate">Real-Time Data Sync</p>
+            <p className="text-sm sm:text-base text-muted-foreground truncate">
               {syncEnabled ? "Connected to Central ERP" : "Sync paused"}
             </p>
           </div>
@@ -130,37 +130,38 @@ const googleSubtitle = useMemo(() => {
             aria-checked={syncEnabled}
             aria-label="Toggle real-time data sync"
             onClick={() => setSyncEnabled(!syncEnabled)}
-            className={`relative h-7 w-12 rounded-full transition-colors ${
+            className={`relative h-7 w-12 sm:h-8 sm:w-14 shrink-0 rounded-full transition-colors cursor-pointer ${
               syncEnabled ? "bg-primary" : "bg-black/20"
             }`}
           >
             <span
-              className={`absolute top-1 size-5 rounded-full bg-card transition-all ${
-                syncEnabled ? "left-6" : "left-1"
+              className={`absolute top-1 sm:top-1.5 size-5 rounded-full bg-card transition-all ${
+                syncEnabled ? "left-6 sm:left-8" : "left-1 sm:left-1.5"
               }`}
             />
           </button>
         </div>
 
-        <h2 className="mb-3 mt-6 text-lg font-bold text-foreground">Configuration & Tools</h2>
-        <div className="space-y-3">
+        <h2 className="mb-3 sm:mb-4 mt-6 sm:mt-8 text-lg sm:text-xl font-bold text-foreground">Configuration & Tools</h2>
         
+        {/* Tools Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <ToolRow
-            icon={<Mail className="size-5" />}
+            icon={<Mail className="size-5 sm:size-6" />}
             title="Google Account"
             subtitle={googleSubtitle}
             onClick={() => setGoogleDialogOpen(true)}
-         />
+          />
 
-                    <ToolRow
-            icon={<FolderOpen className="size-5" />}
+          <ToolRow
+            icon={<FolderOpen className="size-5 sm:size-6" />}
             title="Open DPAS Folder"
             subtitle="Check local backup status"
             onClick={openDpasFolder}
-         />
+          />
           
           <ToolRow
-            icon={<SlidersHorizontal className="size-5" />}
+            icon={<SlidersHorizontal className="size-5 sm:size-6" />}
             title="Target Settings"
             subtitle={`Daily target: ${formatINR(dailyTarget)}`}
             onClick={() => {
@@ -171,13 +172,13 @@ const googleSubtitle = useMemo(() => {
         </div>
       </div>
 
-      {/* Edit profile */}
+      {/* Edit profile Modal */}
       <Modal open={profileOpen} onClose={() => setProfileOpen(false)}>
-        <h3 className="text-xl font-bold text-foreground">Edit Profile</h3>
+        <h3 className="text-xl sm:text-2xl font-bold text-foreground">Edit Profile</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Saved on this device and kept after restart.
         </p>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 sm:mt-5 space-y-3 sm:space-y-4">
           <Labelled label="Name">
             <input
               value={name}
@@ -209,23 +210,24 @@ const googleSubtitle = useMemo(() => {
           <button
             type="button"
             onClick={() => setProfileOpen(false)}
-            className="px-4 py-2 font-semibold text-muted-foreground"
+            className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer hover:bg-black/5 rounded-xl transition-colors"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={saveProfile}
-            className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
+            className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground cursor-pointer hover:opacity-90 transition-opacity"
           >
             Save
           </button>
         </div>
       </Modal>
 
+      {/* Target Settings Modal */}
       <Modal open={targetOpen} onClose={() => setTargetOpen(false)}>
-        <h3 className="text-xl font-bold text-foreground">Target Settings</h3>
-        <label className="mt-4 block">
+        <h3 className="text-xl sm:text-2xl font-bold text-foreground">Target Settings</h3>
+        <label className="mt-4 sm:mt-5 block">
           <span className="mb-1.5 block text-sm font-medium text-foreground">
             Daily Sales Target (₹)
           </span>
@@ -241,7 +243,7 @@ const googleSubtitle = useMemo(() => {
           <button
             type="button"
             onClick={() => setTargetOpen(false)}
-            className="px-4 py-2 font-semibold text-muted-foreground"
+            className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer hover:bg-black/5 rounded-xl transition-colors"
           >
             Cancel
           </button>
@@ -252,90 +254,86 @@ const googleSubtitle = useMemo(() => {
               if (v > 0) setDailyTarget(v);
               setTargetOpen(false);
             }}
-            className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
+            className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground cursor-pointer hover:opacity-90 transition-opacity"
           >
             Save
           </button>
         </div>
       </Modal>
+
+      {/* Google Auth Modal */}
       <Modal
-  open={googleDialogOpen}
-  onClose={() => setGoogleDialogOpen(false)}
->
- <h3 className="text-xl font-bold text-foreground">
-  {googleConnected ? "Google Account" : "Google Sign In"}
-</h3>
+        open={googleDialogOpen}
+        onClose={() => setGoogleDialogOpen(false)}
+      >
+        <h3 className="text-xl sm:text-2xl font-bold text-foreground">
+          {googleConnected ? "Google Account" : "Google Sign In"}
+        </h3>
 
- <div className="mt-4 rounded-xl border border-black/10 bg-surface p-4">
-  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-    Status
-  </p>
+        <div className="mt-4 sm:mt-5 rounded-xl border border-black/10 bg-surface p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Status
+          </p>
 
-  {googleConnected ? (
-    <>
-      <p className="mt-2 font-semibold text-green-600">
-        Connected
-      </p>
+          {googleConnected ? (
+            <>
+              <p className="mt-2 font-semibold text-green-600">
+                Connected
+              </p>
+              <p className="mt-1 text-sm text-foreground break-all">
+                {googleEmail}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-2 font-semibold text-amber-600">
+                Not Connected
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Continue with your Google Account.
+              </p>
+            </>
+          )}
+        </div>
 
-      <p className="mt-1 text-sm text-foreground break-all">
-        {googleEmail}
-      </p>
-    </>
-  ) : (
-    <>
-      <p className="mt-2 font-semibold text-amber-600">
-        Not Connected
-      </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setGoogleDialogOpen(false)}
+            className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer hover:bg-black/5 rounded-xl transition-colors"
+          >
+            {googleConnected ? "Close" : "Cancel"}
+          </button>
 
-      <p className="mt-1 text-sm text-muted-foreground">
-        Continue with your Google Account.
-      </p>
-    </>
-  )}
-</div>
-
-  <div className="mt-6 flex justify-end gap-3">
-    <button
-  type="button"
-  onClick={() => setGoogleDialogOpen(false)}
-  className="px-4 py-2 font-semibold text-muted-foreground"
->
-  {googleConnected ? "Close" : "Cancel"}
-</button>
-
-  <button
-  type="button"
-  onClick={async () => {
-  if (googleConnected) {
-    await signOutGoogle();
-
-    setGoogleEmail("");
-  } else {
-    const result = await signInWithGoogle();
-
-    if (result.success) {
-      setGoogleEmail(result.email);
-    } else {
-      console.log("Google Sign In Failed");
-    }
-  }
-
-  setGoogleDialogOpen(false);
-}}
-  className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground"
->
-  <span className="flex items-center gap-2">
-  {googleConnected ? (
-    <LogOut className="size-4" />
-  ) : (
-    <Chrome className="size-4" />
-  )}
-
-  {googleConnected ? "Sign Out" : "Sign in with Google"}
-</span>
-</button>
-  </div>
-</Modal>
+          <button
+            type="button"
+            onClick={async () => {
+              if (googleConnected) {
+                await signOutGoogle();
+                setGoogleEmail("");
+              } else {
+                const result = await signInWithGoogle();
+                if (result.success) {
+                  setGoogleEmail(result.email);
+                } else {
+                  console.log("Google Sign In Failed");
+                }
+              }
+              setGoogleDialogOpen(false);
+            }}
+            className="rounded-full bg-primary px-6 py-2.5 font-semibold text-primary-foreground cursor-pointer hover:opacity-90 transition-opacity"
+          >
+            <span className="flex items-center gap-2">
+              {googleConnected ? (
+                <LogOut className="size-4" />
+              ) : (
+                <Chrome className="size-4" />
+              )}
+              {googleConnected ? "Sign Out" : "Sign in with Google"}
+            </span>
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
@@ -367,18 +365,18 @@ function ToolRow({
       type="button"
       onClick={onClick}
       disabled={placeholder}
-      className={`flex w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-sm ring-1 ring-black/5 ${
+      className={`flex w-full items-center gap-3 sm:gap-4 rounded-2xl bg-card p-4 sm:p-5 text-left shadow-sm ring-1 ring-black/5 transition-all active:scale-95 cursor-pointer hover:shadow-md ${
         placeholder ? "opacity-60" : ""
       }`}
     >
-      <span className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-primary">
+      <span className="flex size-11 sm:size-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-primary">
         {icon}
       </span>
-      <div className="flex-1">
-        <p className="font-semibold text-foreground">{title}</p>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
+      <div className="flex-1 min-w-0 pr-2">
+        <p className="font-semibold text-foreground text-base sm:text-lg truncate">{title}</p>
+        <p className="text-sm text-muted-foreground truncate">{subtitle}</p>
       </div>
-      <ChevronRight className="size-5 text-muted-foreground" />
+      <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
     </button>
   );
 }

@@ -23,8 +23,7 @@ function CurrentScreen() {
   const { current } = useStore();
   const p = current.params ?? {};
 
-  // यहाँ 'as string' लगाने से ScreenName वाले दोनों TypeScript एरर हट जाएंगे
-  switch (current.name as string) {
+  switch (current.name) {
     case "home":
       return <HomeScreen />;
     case "beat":
@@ -112,7 +111,10 @@ function Shell() {
   useAndroidBackButton();
 
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-md flex-col overflow-hidden bg-surface">
+    <div 
+      className="mx-auto flex h-dvh w-full max-w-7xl flex-col overflow-hidden bg-surface transition-all duration-300"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+    >
       <div className="flex-1 overflow-y-auto overscroll-contain">
         <CurrentScreen />
       </div>
