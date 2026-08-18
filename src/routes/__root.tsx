@@ -86,6 +86,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "theme-color", content: "#1565c0" },
+      // 👇 यहाँ मैंने डार्क मोड ब्लॉक करने वाला कोड जोड़ दिया है 👇
+      { name: "color-scheme", content: "light" },
     ],
     links: [
       {

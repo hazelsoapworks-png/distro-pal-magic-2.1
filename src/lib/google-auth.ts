@@ -7,7 +7,7 @@ async function initGoogle() {
   if (!isInitialized) {
     try {
       await GoogleAuth.initialize({
-        clientId: '10510289925-pnh0hgjsgao4tcbla1s0f44iq0kje4qk.apps.googleusercontent.com',
+        clientId: '1051010289925-pnh0hgjsgao4tcbla1s0f44iq0kje4qk.apps.googleusercontent.com',
         scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.file'],
         grantOfflineAccess: true,
       });

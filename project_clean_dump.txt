@@ -1,4 +1,4 @@
-﻿
+
 --- router.tsx ---
 
 import { QueryClient } from "@tanstack/react-query";
@@ -209,7 +209,7 @@ async function getServerEntry(): Promise<ServerEntry> {
 }
 
 // h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} â€” try/catch alone never fires for those.
+// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
   const contentType = response.headers.get("content-type") ?? "";
@@ -358,40 +358,6 @@ export const startInstance = createStart(() => ({
   --color-warning: hsl(var(--warning));
 }
 
-.dark {
-  --background: 224 71% 4%;
-  --foreground: 213 31% 91%;
-
-  --card: 224 71% 7%;
-  --card-foreground: 213 31% 91%;
-
-  --popover: 224 71% 7%;
-  --popover-foreground: 213 31% 91%;
-
-  --primary: 217 91% 54%;
-  --primary-foreground: 0 0% 100%;
-
-  --secondary: 215 27.9% 16.9%;
-  --secondary-foreground: 213 31% 91%;
-
-  --muted: 215 27.9% 16.9%;
-  --muted-foreground: 217.9 10.6% 64.9%;
-
-  --accent: 215 27.9% 16.9%;
-  --accent-foreground: 213 31% 91%;
-
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 213 31% 91%;
-
-  --border: 215 27.9% 16.9%;
-  --input: 215 27.9% 16.9%;
-  --ring: 217 91% 54%;
-
-  --brand-soft: 217 91% 15%;
-  --surface: 224 71% 4%;
-  --warning: 38 92% 50%;
-}
-
 @layer base {
   * {
     border-color: var(--border);
@@ -404,6 +370,28 @@ export const startInstance = createStart(() => ({
     
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
+  }
+}
+
+/* ये कस्टम क्लासेस आपके ऐप के बैकग्राउंड कलर्स और टेक्स्ट कलर्स को वापस ले आएँगी */
+@layer utilities {
+  .bg-brand-soft {
+    background-color: hsl(214 100% 95%);
+  }
+  .bg-success-soft {
+    background-color: hsl(142 76% 96%);
+  }
+  .bg-warning-soft {
+    background-color: hsl(38 92% 95%);
+  }
+  .text-success {
+    color: hsl(142 76% 36%);
+  }
+  .bg-success {
+    background-color: hsl(142 76% 36%);
+  }
+  .text-teal {
+    color: hsl(173 80% 40%);
   }
 }
 
@@ -982,7 +970,7 @@ export function BeatDetailScreen({ beatId }: { beatId?: string }) {
     <div className="pb-6 max-w-7xl mx-auto w-full">
       <AppHeader
         title={`${beat.name} Beat`}
-        subtitle={`${beat.area} â€¢ ${shops.length} Outlets`}
+        subtitle={`${beat.area} • ${shops.length} Outlets`}
         showBack
         right={
           <div className="relative">
@@ -1360,7 +1348,7 @@ function AddShopModal({ open, onClose, onAdd }: { open: boolean; onClose: () => 
           actionIcon={<LocateFixed className="size-5" />}
           onAction={handleGPS}
         />
-        <LabeledInput label="Opening Dues (â‚¹)" value={dues} onChange={setDues} placeholder="0" type="number" />
+        <LabeledInput label="Opening Dues (₹)" value={dues} onChange={setDues} placeholder="0" type="number" />
       </div>
       <div className="mt-6 flex items-center justify-end gap-3">
         <button type="button" onClick={onClose} className="px-4 py-2 font-semibold text-muted-foreground cursor-pointer">
@@ -1416,10 +1404,10 @@ function CollectModal({
         <h3 className="text-xl font-bold text-foreground">Collect Payment</h3>
       </div>
       <p className="mt-2 text-sm text-muted-foreground">
-        {shop?.name} â€¢ Dues {shop ? formatINR(shop.dues) : ""}
+        {shop?.name} • Dues {shop ? formatINR(shop.dues) : ""}
       </p>
       <div className="mt-4 space-y-3">
-        <LabeledInput label="Amount (â‚¹)" value={amount} onChange={setAmount} placeholder="0" type="number" />
+        <LabeledInput label="Amount (₹)" value={amount} onChange={setAmount} placeholder="0" type="number" />
         <div>
           <span className="mb-1.5 block text-sm font-medium text-foreground">Payment Mode</span>
           <div className="flex gap-2">
@@ -1452,7 +1440,7 @@ function CollectModal({
               onCollect(amt, mode);
               if (shop) {
                 const remaining = Math.max(0, shop.dues - amt);
-                const msg = `Payment received from ${shop.name}: â‚¹${amt} via ${mode}. Remaining dues: â‚¹${remaining}`;
+                const msg = `Payment received from ${shop.name}: ₹${amt} via ${mode}. Remaining dues: ₹${remaining}`;
                 const shopData = shops.find((s) => s.id === shop.id);
                 const phone = shopData?.whatsapp || shopData?.phone || "";
                 if (phone) {
@@ -1908,11 +1896,11 @@ export function DispatchHistoryScreen() {
                 <div className="min-w-0 flex-1 pr-2">
                   <p className="font-bold text-foreground text-base truncate">{d.shopName}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                    {new Date(d.at).toLocaleDateString("en-IN")} â€¢{" "}
+                    {new Date(d.at).toLocaleDateString("en-IN")} •{" "}
                     {new Date(d.at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                   </p>
                   <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                    {d.executive} â€¢ {d.vehicle} â€¢ {d.invoiceNumber}
+                    {d.executive} • {d.vehicle} • {d.invoiceNumber}
                   </p>
                 </div>
                 <span
@@ -1935,7 +1923,7 @@ export function DispatchHistoryScreen() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-foreground">{p?.name ?? "Item"}</p>
                         <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
-                          Ordered {l.orderedQty} â€¢ Dispatched {l.dispatchedQty} â€¢ Remaining {l.remainingQty}
+                          Ordered {l.orderedQty} • Dispatched {l.dispatchedQty} • Remaining {l.remainingQty}
                         </p>
                       </div>
                     </li>
@@ -1951,7 +1939,7 @@ export function DispatchHistoryScreen() {
             >
               <span className="flex items-center gap-2 truncate">
                 <FileText className="size-4 shrink-0" />
-                <span className="truncate">View Invoice â€¢ {formatINR(d.grandTotal)}</span>
+                <span className="truncate">View Invoice • {formatINR(d.grandTotal)}</span>
               </span>
               <ChevronRight className="size-4 shrink-0" />
             </button>
@@ -2047,7 +2035,7 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
 
   return (
     <div className="pb-48 max-w-7xl mx-auto w-full">
-      <AppHeader title="Dispatch Order" subtitle={`${order.shopName} â€¢ ${order.beatName}`} showBack rounded />
+      <AppHeader title="Dispatch Order" subtitle={`${order.shopName} • ${order.beatName}`} showBack rounded />
 
       <div className="px-4 sm:px-6 pt-4">
         {/* Top Info Inputs */}
@@ -2088,10 +2076,10 @@ export function DispatchScreen({ orderId }: { orderId?: string }) {
                     <div className="min-w-0 flex-1 pr-1">
                       <p className="font-semibold text-foreground text-base truncate">{p?.name ?? "Item"}</p>
                       <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">
-                        {p?.code} â€¢ {formatINR(l.price)} / {p?.unit ?? "Pcs"}
+                        {p?.code} • {formatINR(l.price)} / {p?.unit ?? "Pcs"}
                       </p>
                       <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-                        Available Stock: <span className="font-semibold text-foreground">{stock.available}</span> â€¢ 
+                        Available Stock: <span className="font-semibold text-foreground">{stock.available}</span> • 
                         Remaining: <span className="font-semibold text-foreground">{Math.max(0, stock.available - d)}</span>
                       </p>
                     </div>
@@ -2279,7 +2267,7 @@ export function DuesLedgerScreen() {
 
           {beatsWithDues.length === 0 && (
             <div className="col-span-full py-10 text-center text-muted-foreground">
-              No outstanding dues across any active beats! ðŸŽ‰
+              No outstanding dues across any active beats! 🎉
             </div>
           )}
         </div>
@@ -2303,7 +2291,7 @@ import {
   CheckCircle2,
   ChevronDown,
   History,
-  Truck // à¤¨à¤¯à¤¾ à¤†à¤‡à¤•à¥‰à¤¨ Delivery à¤•à¥‡ à¤²à¤¿à¤
+  Truck // नया आइकॉन Delivery के लिए
 } from "lucide-react";
 import { useStore, formatINR } from "@/lib/store";
 
@@ -2668,7 +2656,7 @@ export function InventoryScreen() {
         {/* Alerts */}
         {(totals.low > 0 || totals.out > 0) && (
           <div className="mt-4 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning font-medium">
-            {totals.out} out of stock â€¢ {totals.low} low stock â€” reorder soon.
+            {totals.out} out of stock • {totals.low} low stock — reorder soon.
           </div>
         )}
 
@@ -2697,7 +2685,7 @@ export function InventoryScreen() {
                         </span>
                       </div>
                       <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                        {p.code} â€¢ per {p.unit} â€¢ {formatINR(p.sellingPrice)}
+                        {p.code} • per {p.unit} • {formatINR(p.sellingPrice)}
                       </p>
                     </div>
                   </div>
@@ -2740,7 +2728,7 @@ export function InventoryScreen() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-foreground truncate">
-                    {inward ? "+" : "âˆ’"}
+                    {inward ? "+" : "−"}
                     {m.qty} {p?.name ?? "Item"}
                   </p>
                   <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{m.note}</p>
@@ -2879,7 +2867,7 @@ export function InvoiceScreen({ dispatchId }: { dispatchId?: string }) {
                 <div className="min-w-0 flex-1 pr-2">
                   <p className="text-sm sm:text-base font-semibold text-foreground truncate">{p?.name ?? "Item"}</p>
                   <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground truncate">
-                    Qty: {l.dispatchedQty} / {l.orderedQty} â€¢ Rate: {formatINR(l.price)}
+                    Qty: {l.dispatchedQty} / {l.orderedQty} • Rate: {formatINR(l.price)}
                   </p>
                 </div>
                 <p className="shrink-0 text-sm sm:text-base font-bold text-foreground self-center">
@@ -2969,7 +2957,7 @@ export function MoreScreen() {
   const openDpasFolder = async () => {
     try {
       const stats = await Filesystem.stat({
-        path: "DPAS/data.json", // à¤¯à¤¹à¤¾à¤ SalesBeat à¤•à¥€ à¤œà¤—à¤¹ DPAS à¤•à¤°à¤¨à¤¾ à¤¹à¥ˆ
+        path: "DPAS/data.json", // यहाँ SalesBeat की जगह DPAS करना है
         directory: Directory.Documents,
       });
       alert(`Folder Found! File size: ${stats.size} bytes. Location: Documents/DPAS/data.json`);
@@ -3157,7 +3145,7 @@ export function MoreScreen() {
         <h3 className="text-xl sm:text-2xl font-bold text-foreground">Target Settings</h3>
         <label className="mt-4 sm:mt-5 block">
           <span className="mb-1.5 block text-sm font-medium text-foreground">
-            Daily Sales Target (â‚¹)
+            Daily Sales Target (₹)
           </span>
           <input
             type="number"
@@ -3332,7 +3320,7 @@ export function OrderBookingScreen({
   const beat = beats.find((b) => b.id === beatId);
 
   const [qty, setQty] = useState<Record<string, number>>({});
-  // à¤¨à¤¯à¤¾ à¤¸à¥à¤Ÿà¥‡à¤Ÿ: à¤¸à¥‡à¤²à¥à¤¸à¤®à¥ˆà¤¨ à¤¦à¥à¤µà¤¾à¤°à¤¾ à¤Ÿà¤¾à¤‡à¤ª à¤•à¤¿à¤¯à¤¾ à¤—à¤¯à¤¾ à¤¨à¤¯à¤¾ à¤°à¥‡à¤Ÿ à¤¸à¥‡à¤µ à¤•à¤°à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤
+  // नया स्टेट: सेल्समैन द्वारा टाइप किया गया नया रेट सेव करने के लिए
   const [customPrices, setCustomPrices] = useState<Record<string, string>>({});
 
   const setValue = (id: string, v: number) =>
@@ -3341,7 +3329,7 @@ export function OrderBookingScreen({
       [id]: Math.max(0, Math.min(999, v)),
     }));
 
-  // à¤‘à¤°à¥à¤¡à¤° à¤•à¥€ à¤²à¤¾à¤‡à¤¨à¥à¤¸ à¤•à¥ˆà¤²à¤•à¥à¤²à¥‡à¤Ÿ à¤•à¤°à¤¨à¤¾ (à¤•à¤¸à¥à¤Ÿà¤® à¤°à¥‡à¤Ÿ à¤”à¤° à¤®à¤¾à¤°à¥à¤œà¤¿à¤¨ à¤•à¥‡ à¤¸à¤¾à¤¥)
+  // ऑर्डर की लाइन्स कैलकुलेट करना (कस्टम रेट और मार्जिन के साथ)
   const lines = products
     .map((p) => {
       const q = qty[p.id] ?? 0;
@@ -3353,8 +3341,8 @@ export function OrderBookingScreen({
         ? Number(customVal) 
         : defaultPriceVal;
 
-      // à¤ªà¥à¤°à¥‰à¤«à¤¿à¤Ÿ à¤®à¤¾à¤°à¥à¤œà¤¿à¤¨ à¤•à¥ˆà¤²à¤•à¥à¤²à¥‡à¤¶à¤¨ (Selling Price - Purchase Price)
-      // (à¤…à¤—à¤° purchasePrice à¤¡à¥‡à¤Ÿà¤¾à¤¬à¥‡à¤¸ à¤®à¥‡à¤‚ à¤¨à¤¹à¥€à¤‚ à¤¹à¥ˆ, à¤¤à¥‹ à¤‰à¤¸à¥‡ 0 à¤®à¤¾à¤¨à¤•à¤° à¤•à¥ˆà¤²à¤•à¥à¤²à¥‡à¤Ÿ à¤•à¤°à¥‡à¤—à¤¾)
+      // प्रॉफिट मार्जिन कैलकुलेशन (Selling Price - Purchase Price)
+      // (अगर purchasePrice डेटाबेस में नहीं है, तो उसे 0 मानकर कैलकुलेट करेगा)
       const costPrice = (p as any).purchasePrice || 0; 
       const unitMargin = finalPrice - costPrice;
       const lineMargin = unitMargin * q;
@@ -3373,7 +3361,7 @@ export function OrderBookingScreen({
   const items = lines.reduce((s, l) => s + l.q, 0);
   const totalMargin = lines.reduce((s, l) => s + l.lineMargin, 0);
 
-  // WhatsApp à¤®à¥ˆà¤¸à¥‡à¤œ à¤­à¥‡à¤œà¤¨à¥‡ à¤•à¤¾ à¤«à¤‚à¤•à¥à¤¶à¤¨
+  // WhatsApp मैसेज भेजने का फंक्शन
   const sendWhatsApp = (phone: string, text: string) => {
     if (!phone) return;
     const url = `https://wa.me/91${phone.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
@@ -3383,7 +3371,7 @@ export function OrderBookingScreen({
   const confirm = () => {
     if (!shop || lines.length === 0) return;
 
-    // 1. à¤¡à¥‡à¤Ÿà¤¾à¤¬à¥‡à¤¸ à¤®à¥‡à¤‚ à¤‘à¤°à¥à¤¡à¤° à¤¸à¥‡à¤µ à¤•à¤°à¥‡à¤‚
+    // 1. डेटाबेस में ऑर्डर सेव करें
     placeOrder(
       shop.id,
       lines.map((l) => ({
@@ -3394,19 +3382,19 @@ export function OrderBookingScreen({
       beat?.name ?? "Beat",
     );
 
-    // 2. WhatsApp Auto-Draft Message à¤¤à¥ˆà¤¯à¤¾à¤° à¤•à¤°à¥‡à¤‚
-    let msg = `à¤¨à¤®à¤¸à¥à¤¤à¥‡ ${shop.name},\nà¤†à¤ªà¤•à¤¾ à¤¨à¤¯à¤¾ à¤‘à¤°à¥à¤¡à¤° à¤¬à¥à¤• à¤¹à¥‹ à¤—à¤¯à¤¾ à¤¹à¥ˆ:\n\n`;
+    // 2. WhatsApp Auto-Draft Message तैयार करें
+    let msg = `नमस्ते ${shop.name},\nआपका नया ऑर्डर बुक हो गया है:\n\n`;
     lines.forEach((l, index) => {
-      msg += `${index + 1}. ${l.p.name} - ${l.q} ${l.p.unit} x â‚¹${l.price}\n`;
+      msg += `${index + 1}. ${l.p.name} - ${l.q} ${l.p.unit} x ₹${l.price}\n`;
     });
-    msg += `\nà¤•à¥à¤² à¤°à¤¾à¤¶à¤¿: â‚¹${total}\nà¤§à¤¨à¥à¤¯à¤µà¤¾à¤¦!`;
+    msg += `\nकुल राशि: ₹${total}\nधन्यवाद!`;
 
     const phone = (shop as any).whatsapp || shop.phone;
     if (phone) {
       sendWhatsApp(phone, msg);
     }
 
-    // 3. à¤µà¤¾à¤ªà¤¸ à¤ªà¤¿à¤›à¤²à¥€ à¤¸à¥à¤•à¥à¤°à¥€à¤¨ à¤ªà¤° à¤œà¤¾à¤à¤
+    // 3. वापस पिछली स्क्रीन पर जाएँ
     goBack();
   };
 
@@ -3416,7 +3404,7 @@ export function OrderBookingScreen({
         title="Book Order"
         subtitle={
           shop
-            ? `${shop.name}${beat ? ` â€¢ ${beat.name}` : ""}`
+            ? `${shop.name}${beat ? ` • ${beat.name}` : ""}`
             : "Order booking"
         }
         showBack
@@ -3432,7 +3420,7 @@ export function OrderBookingScreen({
           const defaultPriceVal = lastPrice !== undefined ? lastPrice : p.sellingPrice;
           const currentInputValue = customPrices[p.id] !== undefined ? customPrices[p.id] : defaultPriceVal.toString();
           
-          // à¤•à¤¾à¤°à¥à¤¡ à¤ªà¤° à¤¦à¤¿à¤–à¤¾à¤¨à¥‡ à¤•à¥‡ à¤²à¤¿à¤ à¤®à¤¾à¤°à¥à¤œà¤¿à¤¨ à¤•à¥ˆà¤²à¤•à¥à¤²à¥‡à¤¶à¤¨
+          // कार्ड पर दिखाने के लिए मार्जिन कैलकुलेशन
           const costPrice = (p as any).purchasePrice || 0;
           const currentUnitMargin = Number(currentInputValue || 0) - costPrice;
 
@@ -3442,7 +3430,7 @@ export function OrderBookingScreen({
               className="flex flex-col justify-between rounded-2xl bg-card p-4 sm:p-5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow"
             >
               <div>
-                {/* à¤ªà¥à¤°à¥‹à¤¡à¤•à¥à¤Ÿ à¤•à¥€ à¤œà¤¾à¤¨à¤•à¤¾à¤°à¥€ */}
+                {/* प्रोडक्ट की जानकारी */}
                 <div className="flex min-w-0 items-start gap-3 sm:gap-4">
                   <ProductThumb
                     src={p.imageUrl}
@@ -3455,7 +3443,7 @@ export function OrderBookingScreen({
                       {p.name}
                     </p>
                     <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">
-                      {p.code} â€¢ per {p.unit}
+                      {p.code} • per {p.unit}
                     </p>
                     <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground truncate">
                       Available Stock:{" "}
@@ -3466,7 +3454,7 @@ export function OrderBookingScreen({
                   </div>
                 </div>
 
-                {/* à¤ªà¥à¤°à¤¾à¤¨à¥‡ à¤”à¤° à¤¬à¥‡à¤¸à¤¿à¤• à¤°à¥‡à¤Ÿ à¤•à¤¾ à¤¡à¤¿à¤¸à¥à¤ªà¥à¤²à¥‡ */}
+                {/* पुराने और बेसिक रेट का डिस्प्ले */}
                 <div className="mt-4 flex items-center justify-between rounded-xl bg-surface p-3 text-sm sm:text-base">
                   <div>
                     <p className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground font-medium">Basic Rate</p>
@@ -3481,11 +3469,11 @@ export function OrderBookingScreen({
                 </div>
               </div>
 
-              {/* à¤¨à¤¯à¤¾ à¤°à¥‡à¤Ÿ à¤¬à¤¦à¤²à¤¨à¥‡ à¤•à¤¾ à¤¬à¥‰à¤•à¥à¤¸ à¤”à¤° à¤•à¥à¤µà¤¾à¤‚à¤Ÿà¤¿à¤Ÿà¥€ */}
+              {/* नया रेट बदलने का बॉक्स और क्वांटिटी */}
               <div className="mt-4 flex items-center justify-between border-t border-black/5 pt-4">
                 <div className="flex flex-col">
                   <span className="mb-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Today's Rate (â‚¹)
+                    Today's Rate (₹)
                   </span>
                   <div className="flex flex-col gap-1">
                     <input
@@ -3500,7 +3488,7 @@ export function OrderBookingScreen({
                       }
                       className="h-9 sm:h-10 w-24 sm:w-28 rounded-lg bg-surface px-2 text-center text-sm sm:text-base font-bold text-foreground outline-none ring-1 ring-black/5 focus:ring-primary/40 transition-shadow"
                     />
-                    {/* à¤¨à¤¯à¤¾ à¤«à¥€à¤šà¤°: à¤¹à¤° à¤ªà¥€à¤¸ à¤ªà¤° à¤®à¤¾à¤°à¥à¤œà¤¿à¤¨ (à¤ªà¥à¤°à¥‰à¤«à¤¿à¤Ÿ) */}
+                    {/* नया फीचर: हर पीस पर मार्जिन (प्रॉफिट) */}
                     {costPrice > 0 && (
                       <span className={`text-[10px] sm:text-[11px] font-bold ${currentUnitMargin >= 0 ? 'text-success' : 'text-destructive'}`}>
                         Margin: {formatINR(currentUnitMargin)}
@@ -3559,7 +3547,7 @@ export function OrderBookingScreen({
           <div className="flex flex-col min-w-0 pr-2">
             <div className="flex items-center gap-2">
               <p className="text-xs sm:text-sm text-muted-foreground font-medium">{items} items</p>
-              {/* à¤¨à¤¯à¤¾ à¤«à¥€à¤šà¤°: à¤Ÿà¥‹à¤Ÿà¤² à¤®à¤¾à¤°à¥à¤œà¤¿à¤¨ */}
+              {/* नया फीचर: टोटल मार्जिन */}
               {totalMargin > 0 && (
                 <span className="flex items-center gap-1 rounded-md bg-success/10 px-1.5 py-0.5 text-[10px] sm:text-xs font-bold text-success">
                   <TrendingUp className="size-3" /> {formatINR(totalMargin)}
@@ -3602,7 +3590,7 @@ export function OrdersHistoryScreen() {
   const [filterType, setFilterType] = useState<FilterType>("today");
   const [customDate, setCustomDate] = useState<string>("");
 
-  // 1. à¤¤à¤¾à¤°à¥€à¤–à¥‹à¤‚ à¤•à¥€ à¤—à¤£à¤¨à¤¾ (Local Timezone à¤®à¥‡à¤‚ à¤¸à¤Ÿà¥€à¤• 'Start of Day')
+  // 1. तारीखों की गणना (Local Timezone में सटीक 'Start of Day')
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -3615,7 +3603,7 @@ export function OrdersHistoryScreen() {
   const startOf30DaysAgo = new Date(startOfToday);
   startOf30DaysAgo.setDate(startOf30DaysAgo.getDate() - 30);
 
-  // 2. à¤«à¤¼à¤¿à¤²à¥à¤Ÿà¤°à¤¿à¤‚à¤— à¤•à¤¾ à¤…à¤šà¥‚à¤• à¤²à¥‰à¤œà¤¿à¤•
+  // 2. फ़िल्टरिंग का अचूक लॉजिक
   const filteredOrders = orders.filter((o) => {
     if (!o.createdAt) return false;
 
@@ -3639,7 +3627,7 @@ export function OrdersHistoryScreen() {
     }
 
     if (filterType === "custom" && customDate) {
-      // customDate HTML input à¤¸à¥‡ "YYYY-MM-DD" à¤«à¥‰à¤°à¥à¤®à¥‡à¤Ÿ à¤®à¥‡à¤‚ à¤†à¤¤à¤¾ à¤¹à¥ˆ
+      // customDate HTML input से "YYYY-MM-DD" फॉर्मेट में आता है
       const [year, month, day] = customDate.split("-").map(Number);
       const startOfCustom = new Date(year, month - 1, day);
       const endOfCustom = new Date(year, month - 1, day + 1);
@@ -3881,7 +3869,7 @@ export function ProductsScreen() {
                 <div className="min-w-0 flex-1 pr-1">
                   <p className="font-bold text-foreground text-base sm:text-lg truncate">{p.name}</p>
                   <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">
-                    Code: {p.code} â€¢ per {p.unit}
+                    Code: {p.code} • per {p.unit}
                   </p>
                   {(p.category || p.hasVariants) && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -4156,8 +4144,8 @@ function ProductFormModal({
         </label>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          <FormRow label="Cost / Buying (â‚¹)" value={buying} onChange={setBuying} placeholder="0" type="number" />
-          <FormRow label="Selling / MRP (â‚¹)" value={selling} onChange={setSelling} placeholder="0" type="number" />
+          <FormRow label="Cost / Buying (₹)" value={buying} onChange={setBuying} placeholder="0" type="number" />
+          <FormRow label="Selling / MRP (₹)" value={selling} onChange={setSelling} placeholder="0" type="number" />
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -4342,7 +4330,7 @@ export function PurchaseBillScreen() {
                   <div className="min-w-0 pr-2">
                     <p className="font-semibold text-foreground text-base sm:text-lg truncate">{p.name}</p>
                     <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground truncate">
-                      {p.code} â€¢ per {p.unit}
+                      {p.code} • per {p.unit}
                     </p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
@@ -4376,7 +4364,7 @@ export function PurchaseBillScreen() {
                 {q > 0 && (
                   <div className="mt-4 pt-3 border-t border-black/5 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs sm:text-sm font-medium text-muted-foreground">Price â‚¹</span>
+                      <span className="text-xs sm:text-sm font-medium text-muted-foreground">Price ₹</span>
                       <input
                         inputMode="decimal"
                         value={price[p.id] ?? String(p.buyingPrice)}
@@ -9174,8 +9162,8 @@ function record(error: unknown) {
   lastCapturedError = { error, at: Date.now() };
 }
 
-// h3's HTTPError serializes to {"status":500,"unhandled":true,"message":"HTTPError"} â€”
-// no stack, no cause â€” so a plain console.error(error) reaches the log pipeline with
+// h3's HTTPError serializes to {"status":500,"unhandled":true,"message":"HTTPError"} —
+// no stack, no cause — so a plain console.error(error) reaches the log pipeline with
 // the failure detail stripped. Expand Error-like args into a string that keeps the
 // message, stack, and the full cause chain.
 const CAUSE_DEPTH_LIMIT = 5;
@@ -9215,8 +9203,8 @@ function isErrorLike(value: unknown): value is Error {
   return value instanceof Error;
 }
 
-// Wrap console.error so errors logged by any layer â€” including h3's internal
-// unhandled-error logging, which this file cannot hook directly â€” are both
+// Wrap console.error so errors logged by any layer — including h3's internal
+// unhandled-error logging, which this file cannot hook directly — are both
 // recorded for consumeLastCapturedError and expanded before serialization.
 const originalConsoleError = console.error.bind(console);
 console.error = (...args: unknown[]) => {
@@ -9294,7 +9282,7 @@ async function initGoogle() {
   if (!isInitialized) {
     try {
       await GoogleAuth.initialize({
-        clientId: '10510289925-pnh0hgjsgao4tcbla1s0f44iq0kje4qk.apps.googleusercontent.com',
+        clientId: '1051010289925-pnh0hgjsgao4tcbla1s0f44iq0kje4qk.apps.googleusercontent.com',
         scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.file'],
         grantOfflineAccess: true,
       });
@@ -9352,7 +9340,7 @@ async function initGoogle() {
   if (!isInitialized) {
     try {
       await GoogleAuth.initialize({
-        clientId: '10510289925-pnh0hgjsgao4tcbla1s0f44iq0kje4qk.apps.googleusercontent.com',
+        clientId: '1051010289925-pnh0hgjsgao4tcbla1s0f44iq0kje4qk.apps.googleusercontent.com',
         scopes: ['profile', 'email', 'https://www.googleapis.com/auth/drive.file'],
         grantOfflineAccess: true,
       });
@@ -9523,6 +9511,7 @@ export function goBackStack(stack: ScreenEntry[]): ScreenEntry[] {
 --- persistence.ts ---
 
 import { dbService } from "./sqlite";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import type { Profile, Beat, Shop, Product, Transaction, Order, PurchaseBill, StockMovement, DispatchRecord } from "./types";
 
 export interface AppStateData {
@@ -9587,6 +9576,7 @@ export async function saveState(state: AppStateData): Promise<void> {
   try {
     await dbService.initializeDatabase();
 
+    // 1. SQLite डेटाबेस में सेव करें
     await Promise.all([
       dbService.saveTableData("beats", state.beats),
       dbService.saveTableData("shops", state.shops),
@@ -9601,10 +9591,106 @@ export async function saveState(state: AppStateData): Promise<void> {
       dbService.setMeta("syncEnabled", state.syncEnabled),
       dbService.setMeta("googleEmail", state.googleEmail),
     ]);
+
+    // 2. फोन के फाइल मैनेजर (Documents/DPAS/data.json) में भी बैकअप फाइल सेव करें
+    try {
+      await Filesystem.writeFile({
+        path: "DPAS/data.json",
+        data: JSON.stringify(state, null, 2),
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8,
+        recursive: true,
+      });
+    } catch (fsError) {
+      console.error("Failed to write DPAS backup file to filesystem:", fsError);
+    }
+
   } catch (error) {
     console.error("Failed to save state to SQLite:", error);
   }
 }
+
+
+
+--- products.ts ---
+
+import type { Product } from "@/lib/types";
+
+export const seedProducts: Product[] = [
+  { id: "p1", name: "Matte Lipstick 6008 Mix Square", code: "6008 MIX SQUARE", buyingPrice: 19, sellingPrice: 22, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p2", name: "Matte Lipstick 6008 DD", code: "EGML 6008 DD", buyingPrice: 17, sellingPrice: 20, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED"], openingStock: 300, lowStockThreshold: 24 },
+  { id: "p3", name: "Star Lipstick", code: "EGL-23 NEW STAR", buyingPrice: 6, sellingPrice: 7, unit: "Pcs", category: "Lip", hasVariants: false, shades: ["MIX"], openingStock: 300, lowStockThreshold: 24 },
+  { id: "p4", name: "Mini Lipgloss", code: "EGL 3004", buyingPrice: 9, sellingPrice: 11, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE"], openingStock: 432, lowStockThreshold: 24 },
+  { id: "p5", name: "2 in 1 Liquid Lipstick", code: "EGL-21", buyingPrice: 34, sellingPrice: 40, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p6", name: "Lipgloss 028", code: "EGLG 028", buyingPrice: 21, sellingPrice: 25, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 48, lowStockThreshold: 24 },
+  { id: "p7", name: "Lipgloss 2005 BB", code: "EGL 2005 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 216, lowStockThreshold: 24 },
+  { id: "p8", name: "Lipgloss 2006 BB", code: "EGL 2006 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 216, lowStockThreshold: 24 },
+  { id: "p9", name: "Lipgloss 3003 BB", code: "EGLG 3003 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 216, lowStockThreshold: 24 },
+  { id: "p10", name: "Lip Gloss 001", code: "EGLL 001", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p11", name: "Lip Gloss 002", code: "EGLL 002", buyingPrice: 29, sellingPrice: 34, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p12", name: "Lip Gloss 003", code: "EGLL 003", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p13", name: "Lip Gloss 004", code: "EGLL 004", buyingPrice: 30, sellingPrice: 35, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p14", name: "Lip Gloss 006", code: "EGLL 006", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p15", name: "Lip Gloss 007", code: "EGLL 007", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p16", name: "Lip Gloss 008", code: "EGLL 008", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p17", name: "Lip Gloss 009", code: "EGLL 009", buyingPrice: 32, sellingPrice: 38, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p18", name: "Lip Gloss 010", code: "EGLL 010", buyingPrice: 32, sellingPrice: 38, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p19", name: "Non Transfer Lipstick 101", code: "EGNT 101", buyingPrice: 48, sellingPrice: 56, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE", "WINE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p20", name: "Non Transfer Lipstick Tray Set (3+1 Free)", code: "EGNT 102", buyingPrice: 76, sellingPrice: 90, unit: "Set", category: "Lip", hasVariants: false, shades: ["18 SHADES"], openingStock: 24, lowStockThreshold: 24 },
+  { id: "p21", name: "36-H Eye Pencil", code: "EGP-203", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p22", name: "Eyeliner Pen", code: "EGEP 004", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p23", name: "Endless Black Kajal", code: "EGKJ 002", buyingPrice: 30, sellingPrice: 35, unit: "Pcs", category: "Eye", hasVariants: true, shades: ["BLACK", "WHITE"], openingStock: 180, lowStockThreshold: 24 },
+  { id: "p24", name: "Tray Kajal (12 Pc Tray Pack)", code: "SYKJ 007", buyingPrice: 26, sellingPrice: 30, unit: "Pcs", category: "Eye", hasVariants: true, shades: ["BLACK", "JET BLACK", "PEARL BLACK"], openingStock: 240, lowStockThreshold: 24 },
+  { id: "p25", name: "Lipliner", code: "EGP-9002", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["1 NO.", "10 NO.", "13 NO.", "16 NO.", "23 NO.", "AB MIX"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p26", name: "Hair Spray", code: "ENZO", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Hair", hasVariants: false, shades: ["STRONG"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p27", name: "Crazy Lipbalm", code: "EGLB 6101", buyingPrice: 80, sellingPrice: 94, unit: "Box", category: "Lip", hasVariants: false, shades: ["MIX COLORS"], openingStock: 10, lowStockThreshold: 24 },
+  { id: "p28", name: "18 Color Eyeshadow", code: "EGES 8001", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p29", name: "14 Color Eyeshadow", code: "EGES 8038", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p30", name: "4 Colour Blusher", code: "EGES-8004", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p31", name: "7 Color Eyeshadow", code: "SYES 209", buyingPrice: 51, sellingPrice: 60, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p32", name: "12 Color Eyeshadow", code: "SYES 210", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p33", name: "12 Color Eyeshadow (057)", code: "SYES 057", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p34", name: "36 Color Eyeshadow", code: "EGES 8004 AA", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 24, lowStockThreshold: 24 },
+  { id: "p35", name: "37 Color Eyeshadow", code: "EGES 8004 BB", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 24, lowStockThreshold: 24 },
+  { id: "p36", name: "40 Color Eyeshadow", code: "EGES 8004 CC", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 24, lowStockThreshold: 24 },
+  { id: "p37", name: "54 Color Eyeshadow", code: "EGES 8004 DD", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p38", name: "12 Color Glitter", code: "EG-4011", buyingPrice: 66, sellingPrice: 78, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p39", name: "24 Colour Concealer Palette", code: "SYCP-002", buyingPrice: 76, sellingPrice: 90, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADES"], openingStock: 36, lowStockThreshold: 24 },
+  { id: "p40", name: "22 Colours Make Up Kit", code: "EGES-8017 BB", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p41", name: "13 Colours Make Up Kit", code: "EGES 8018", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p42", name: "21 Colours Make Up Kit", code: "EGES 8019", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p43", name: "17 Colours Make Up Kit", code: "EGES-8021", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p44", name: "17 Colours Make Up Kit (8043)", code: "EGES 8043", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p45", name: "24 Colours Medium Kit", code: "EGES-8041", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["1 SHADE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p46", name: "22 Colours Make Up Kit", code: "EGES-8044", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["1 SHADE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p47", name: "Small Laptop Kit", code: "EG-8022", buyingPrice: 115, sellingPrice: 135, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADES MIX"], openingStock: 24, lowStockThreshold: 24 },
+  { id: "p48", name: "Single Colour Highlighter", code: "EGHL-4001", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: true, shades: ["2 NO.", "4 NO.", "5 NO.", "7 NO."], openingStock: 90, lowStockThreshold: 24 },
+  { id: "p49", name: "Brick Highlighter", code: "EGBH 4003", buyingPrice: 55, sellingPrice: 65, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p50", name: "Single Colour Rose Highlighter", code: "SYHL 088", buyingPrice: 34, sellingPrice: 40, unit: "Pcs", category: "Face", hasVariants: false, shades: ["MIX 6 COLORS"], openingStock: 90, lowStockThreshold: 24 },
+  { id: "p51", name: "2 in 1 Compact Green Tea", code: "EGCP 6806 GT", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p52", name: "2 in 1 Compact Baby Pink", code: "EGCP 6806 BP", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p53", name: "2 in 1 Compact Matte Pourless", code: "EGCP 6806 MP", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p54", name: "2 in 1 Compact (AA)", code: "EGCP 6806 AA", buyingPrice: 81, sellingPrice: 95, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 54, lowStockThreshold: 24 },
+  { id: "p55", name: "2 in 1 Compact (BB)", code: "EGCP 6806 BB", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p56", name: "2 in 1 Compact 001", code: "EGCP 001", buyingPrice: 81, sellingPrice: 95, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 54, lowStockThreshold: 24 },
+  { id: "p57", name: "2 in 1 Compact 004", code: "EGCP 004", buyingPrice: 61, sellingPrice: 72, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 54, lowStockThreshold: 24 },
+  { id: "p58", name: "Make Up Fixer", code: "EGMF 6201", buyingPrice: 64, sellingPrice: 75, unit: "Pcs", category: "Face", hasVariants: false, shades: ["LEMON FIXER"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p59", name: "Face Serum", code: "EGFS 001", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 FLAVOUR"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p60", name: "Matte Mousse Red Foundation", code: "EGFD-6703 AA", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX)"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p61", name: "CC Foundation", code: "EGFD-6703 BB", buyingPrice: 56, sellingPrice: 66, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 108, lowStockThreshold: 24 },
+  { id: "p62", name: "Color Change Foundation", code: "EGFD 6704", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["SINGLE SHADE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p63", name: "Golden Cap Foundation", code: "EGFD 6706 AA", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 36, lowStockThreshold: 24 },
+  { id: "p64", name: "Pink Cap Foundation", code: "EGFD 6706 BB", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 36, lowStockThreshold: 24 },
+  { id: "p65", name: "Eyeliner 204", code: "EGEL 204", buyingPrice: 38, sellingPrice: 45, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p66", name: "Mascara 204", code: "EGMS 204", buyingPrice: 42, sellingPrice: 50, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p67", name: "Eyeliner 205", code: "EGEL 205", buyingPrice: 38, sellingPrice: 45, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p68", name: "Mascara 205", code: "EGMS 205", buyingPrice: 42, sellingPrice: 50, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p69", name: "Silicon Primer", code: "EGPR-010", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Face", hasVariants: false, shades: ["TRANSPARENT"], openingStock: 108, lowStockThreshold: 24 },
+  { id: "p70", name: "Silky Primer", code: "EGPR-011", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["TRANSPARENT"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p71", name: "Lumi Primer", code: "EGPR-012", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Face", hasVariants: true, shades: ["GOLD GLITTER", "SILVER GLITTER", "PINK GLITTER"], openingStock: 144, lowStockThreshold: 24 },
+  { id: "p72", name: "Nail Polish 003", code: "EGNP 003", buyingPrice: 17, sellingPrice: 20, unit: "Pcs", category: "Nail Care", hasVariants: true, shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "METTALIC", "SPECIAL MATT", "NUDE PASTEL"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p73", name: "Nail Polish 008", code: "EGNP 008", buyingPrice: 10, sellingPrice: 12, unit: "Pcs", category: "Nail Care", hasVariants: true, shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "CHANDI CLR", "SPECIAL MATT", "NUDE PASTEL"], openingStock: 36, lowStockThreshold: 24 },
+];
 
 
 
@@ -9615,13 +9701,18 @@ import type {
   DispatchRecord,
   Order,
   PersistedState,
-  Product,
   Profile,
   PurchaseBill,
-  Shop,
   StockMovement,
   Transaction,
 } from "@/lib/types";
+
+// 1. इन्हें पहले फाइल के अंदर इम्पोर्ट करें ताकि buildDefaults() इन्हें पहचान सके
+import { seedProducts } from "./products";
+import { seedShops } from "./shops";
+
+// 2. और इन्हें यहीं से वापस एक्सपोर्ट भी करें ताकि बाकी फाइलें भी इनका इस्तेमाल कर सकें
+export { seedProducts, seedShops };
 
 const seedProfile: Profile = {
   name: "Rahul Sharma",
@@ -9633,1115 +9724,12 @@ const seedProfile: Profile = {
 };
 
 const seedBeats: Beat[] = [
-  {
-    id: "rambagh",
-    name: "Rambagh",
-    area: "Central District - Zone A",
-    location: "Central District",
-    salesToday: 4500,
-  },
-  {
-    id: "city-center",
-    name: "City Center",
-    area: "Downtown Metro Hub",
-    location: "Downtown",
-    salesToday: 0,
-  },
-  {
-    id: "commercial-hub",
-    name: "Commercial Hub",
-    area: "Trade Tower Complex",
-    location: "Trade Tower",
-    salesToday: 0,
-  },
-  {
-    id: "station-road",
-    name: "Station Road",
-    area: "East Transit Line",
-    location: "East Transit",
-    salesToday: 0,
-  },
-  {
-    id: "gandhi-nagar",
-    name: "Gandhi Nagar",
-    area: "West Residential Belt",
-    location: "West Belt",
-    salesToday: 0,
-  },
-  {
-    id: "market-yard",
-    name: "Market Yard",
-    area: "South Wholesale Zone",
-    location: "South Zone",
-    salesToday: 0,
-  },
-];
-
-const seedShops: Shop[] = [
-  {
-    id: "s1",
-    beatId: "rambagh",
-    name: "Sharma Kirana Store",
-    owner: "Ramesh Sharma",
-    phone: "+91 98765 12345",
-    address: "Shop 14, Main Bazaar, Rambagh",
-    dues: 14500,
-    status: "pending",
-  },
-  {
-    id: "s2",
-    beatId: "rambagh",
-    name: "Gupta Provision Hub",
-    owner: "Suresh Gupta",
-    phone: "+91 98123 45678",
-    address: "45 Station Road, Rambagh",
-    dues: 8200,
-    status: "ordered",
-    orderAmount: 345,
-  },
-  {
-    id: "s3",
-    beatId: "rambagh",
-    name: "Verma General Store",
-    owner: "Anil Varma",
-    phone: "+91 99887 76655",
-    address: "Mall Road, Rambagh",
-    dues: 17000,
-    status: "paid",
-    paidAmount: 5000,
-  },
-  {
-    id: "s4",
-    beatId: "rambagh",
-    name: "Royal Traders",
-    owner: "Vikram Singh",
-    phone: "+91 97654 32109",
-    address: "Sector 3 Market, Rambagh",
-    dues: 5400,
-    status: "pending",
-  },
-  {
-    id: "s5",
-    beatId: "city-center",
-    name: "Apex Supermarket",
-    owner: "Neha Jain",
-    phone: "+91 90000 11111",
-    address: "MG Road, City Center",
-    dues: 22000,
-    status: "pending",
-  },
-  {
-    id: "s6",
-    beatId: "city-center",
-    name: "Metro Cash & Carry",
-    owner: "Rohit Mehta",
-    phone: "+91 90000 22222",
-    address: "Metro Plaza, City Center",
-    dues: 18000,
-    status: "pending",
-  },
-  {
-    id: "s7",
-    beatId: "city-center",
-    name: "Star Bazaar",
-    owner: "Kavya Rao",
-    phone: "+91 90000 33333",
-    address: "Ring Road, City Center",
-    dues: 14000,
-    status: "pending",
-  },
-  {
-    id: "s8",
-    beatId: "commercial-hub",
-    name: "Prime Wholesale",
-    owner: "Amit Shah",
-    phone: "+91 90000 44444",
-    address: "Tower A, Commercial Hub",
-    dues: 30000,
-    status: "pending",
-  },
-  {
-    id: "s9",
-    beatId: "commercial-hub",
-    name: "Unity Distributors",
-    owner: "Sana Khan",
-    phone: "+91 90000 55555",
-    address: "Tower C, Commercial Hub",
-    dues: 27000,
-    status: "pending",
-  },
-  {
-    id: "s10",
-    beatId: "station-road",
-    name: "Transit Mart",
-    owner: "Deepak Nair",
-    phone: "+91 90000 66666",
-    address: "Platform Lane, Station Road",
-    dues: 9100,
-    status: "pending",
-  },
-  {
-    id: "s11",
-    beatId: "station-road",
-    name: "Junction Stores",
-    owner: "Priya Das",
-    phone: "+91 90000 77777",
-    address: "Exit Gate, Station Road",
-    dues: 7000,
-    status: "pending",
-  },
-];
-
-export const seedProducts: Product[] = [
-  {
-    id: "p1",
-    name: "Matte Lipstick 6008 Mix Square",
-    code: "6008 MIX SQUARE",
-    buyingPrice: 19,
-    sellingPrice: 22,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p2",
-    name: "Matte Lipstick 6008 DD",
-    code: "EGML 6008 DD",
-    buyingPrice: 17,
-    sellingPrice: 20,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED"],
-    openingStock: 300,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p3",
-    name: "Star Lipstick",
-    code: "EGL-23 NEW STAR",
-    buyingPrice: 6,
-    sellingPrice: 7,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: false,
-    shades: ["MIX"],
-    openingStock: 300,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p4",
-    name: "Mini Lipgloss",
-    code: "EGL 3004",
-    buyingPrice: 9,
-    sellingPrice: 11,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON", "NUDE"],
-    openingStock: 432,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p5",
-    name: "2 in 1 Liquid Lipstick",
-    code: "EGL-21",
-    buyingPrice: 34,
-    sellingPrice: 40,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p6",
-    name: "Lipgloss 028",
-    code: "EGLG 028",
-    buyingPrice: 21,
-    sellingPrice: 25,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON"],
-    openingStock: 48,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p7",
-    name: "Lipgloss 2005 BB",
-    code: "EGL 2005 BB",
-    buyingPrice: 24,
-    sellingPrice: 28,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON"],
-    openingStock: 216,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p8",
-    name: "Lipgloss 2006 BB",
-    code: "EGL 2006 BB",
-    buyingPrice: 24,
-    sellingPrice: 28,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON"],
-    openingStock: 216,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p9",
-    name: "Lipgloss 3003 BB",
-    code: "EGLG 3003 BB",
-    buyingPrice: 24,
-    sellingPrice: 28,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON"],
-    openingStock: 216,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p10",
-    name: "Lip Gloss 001",
-    code: "EGLL 001",
-    buyingPrice: 31,
-    sellingPrice: 37,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p11",
-    name: "Lip Gloss 002",
-    code: "EGLL 002",
-    buyingPrice: 29,
-    sellingPrice: 34,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p12",
-    name: "Lip Gloss 003",
-    code: "EGLL 003",
-    buyingPrice: 31,
-    sellingPrice: 37,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p13",
-    name: "Lip Gloss 004",
-    code: "EGLL 004",
-    buyingPrice: 30,
-    sellingPrice: 35,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p14",
-    name: "Lip Gloss 006",
-    code: "EGLL 006",
-    buyingPrice: 31,
-    sellingPrice: 37,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p15",
-    name: "Lip Gloss 007",
-    code: "EGLL 007",
-    buyingPrice: 37,
-    sellingPrice: 44,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p16",
-    name: "Lip Gloss 008",
-    code: "EGLL 008",
-    buyingPrice: 37,
-    sellingPrice: 44,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p17",
-    name: "Lip Gloss 009",
-    code: "EGLL 009",
-    buyingPrice: 32,
-    sellingPrice: 38,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p18",
-    name: "Lip Gloss 010",
-    code: "EGLL 010",
-    buyingPrice: 32,
-    sellingPrice: 38,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p19",
-    name: "Non Transfer Lipstick 101",
-    code: "EGNT 101",
-    buyingPrice: 48,
-    sellingPrice: 56,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["MIX", "RED", "MEHROON", "NUDE", "WINE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p20",
-    name: "Non Transfer Lipstick Tray Set (3+1 Free)",
-    code: "EGNT 102",
-    buyingPrice: 76,
-    sellingPrice: 90,
-    unit: "Set",
-    category: "Lip",
-    hasVariants: false,
-    shades: ["18 SHADES"],
-    openingStock: 24,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p21",
-    name: "36-H Eye Pencil",
-    code: "EGP-203",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["BLACK"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p22",
-    name: "Eyeliner Pen",
-    code: "EGEP 004",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["BLACK"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p23",
-    name: "Endless Black Kajal",
-    code: "EGKJ 002",
-    buyingPrice: 30,
-    sellingPrice: 35,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: true,
-    shades: ["BLACK", "WHITE"],
-    openingStock: 180,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p24",
-    name: "Tray Kajal (12 Pc Tray Pack)",
-    code: "SYKJ 007",
-    buyingPrice: 26,
-    sellingPrice: 30,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: true,
-    shades: ["BLACK", "JET BLACK", "PEARL BLACK"],
-    openingStock: 240,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p25",
-    name: "Lipliner",
-    code: "EGP-9002",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Lip",
-    hasVariants: true,
-    shades: ["1 NO.", "10 NO.", "13 NO.", "16 NO.", "23 NO.", "AB MIX"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p26",
-    name: "Hair Spray",
-    code: "ENZO",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Hair",
-    hasVariants: false,
-    shades: ["STRONG"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p27",
-    name: "Crazy Lipbalm",
-    code: "EGLB 6101",
-    buyingPrice: 80,
-    sellingPrice: 94,
-    unit: "Box",
-    category: "Lip",
-    hasVariants: false,
-    shades: ["MIX COLORS"],
-    openingStock: 10,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p28",
-    name: "18 Color Eyeshadow",
-    code: "EGES 8001",
-    buyingPrice: 37,
-    sellingPrice: 44,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["3 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p29",
-    name: "14 Color Eyeshadow",
-    code: "EGES 8038",
-    buyingPrice: 37,
-    sellingPrice: 44,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["3 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p30",
-    name: "4 Colour Blusher",
-    code: "EGES-8004",
-    buyingPrice: 37,
-    sellingPrice: 44,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p31",
-    name: "7 Color Eyeshadow",
-    code: "SYES 209",
-    buyingPrice: 51,
-    sellingPrice: 60,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["3 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p32",
-    name: "12 Color Eyeshadow",
-    code: "SYES 210",
-    buyingPrice: 60,
-    sellingPrice: 70,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p33",
-    name: "12 Color Eyeshadow (057)",
-    code: "SYES 057",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p34",
-    name: "36 Color Eyeshadow",
-    code: "EGES 8004 AA",
-    buyingPrice: 132,
-    sellingPrice: 155,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 24,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p35",
-    name: "37 Color Eyeshadow",
-    code: "EGES 8004 BB",
-    buyingPrice: 132,
-    sellingPrice: 155,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 24,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p36",
-    name: "40 Color Eyeshadow",
-    code: "EGES 8004 CC",
-    buyingPrice: 132,
-    sellingPrice: 155,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 24,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p37",
-    name: "54 Color Eyeshadow",
-    code: "EGES 8004 DD",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p38",
-    name: "12 Color Glitter",
-    code: "EG-4011",
-    buyingPrice: 66,
-    sellingPrice: 78,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p39",
-    name: "24 Colour Concealer Palette",
-    code: "SYCP-002",
-    buyingPrice: 76,
-    sellingPrice: 90,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["2 SHADES"],
-    openingStock: 36,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p40",
-    name: "22 Colours Make Up Kit",
-    code: "EGES-8017 BB",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["2 SHADE (MIX)"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p41",
-    name: "13 Colours Make Up Kit",
-    code: "EGES 8018",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["2 SHADE (MIX)"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p42",
-    name: "21 Colours Make Up Kit",
-    code: "EGES 8019",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["2 SHADE (MIX)"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p43",
-    name: "17 Colours Make Up Kit",
-    code: "EGES-8021",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["2 SHADE (MIX)"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p44",
-    name: "17 Colours Make Up Kit (8043)",
-    code: "EGES 8043",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["2 SHADE (MIX)"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p45",
-    name: "24 Colours Medium Kit",
-    code: "EGES-8041",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["1 SHADE"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p46",
-    name: "22 Colours Make Up Kit",
-    code: "EGES-8044",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["1 SHADE"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p47",
-    name: "Small Laptop Kit",
-    code: "EG-8022",
-    buyingPrice: 115,
-    sellingPrice: 135,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["2 SHADES MIX"],
-    openingStock: 24,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p48",
-    name: "Single Colour Highlighter",
-    code: "EGHL-4001",
-    buyingPrice: 47,
-    sellingPrice: 55,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: true,
-    shades: ["2 NO.", "4 NO.", "5 NO.", "7 NO."],
-    openingStock: 90,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p49",
-    name: "Brick Highlighter",
-    code: "EGBH 4003",
-    buyingPrice: 55,
-    sellingPrice: 65,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["4 SHADES MIX"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p50",
-    name: "Single Colour Rose Highlighter",
-    code: "SYHL 088",
-    buyingPrice: 34,
-    sellingPrice: 40,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["MIX 6 COLORS"],
-    openingStock: 90,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p51",
-    name: "2 in 1 Compact Green Tea",
-    code: "EGCP 6806 GT",
-    buyingPrice: 47,
-    sellingPrice: 55,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p52",
-    name: "2 in 1 Compact Baby Pink",
-    code: "EGCP 6806 BP",
-    buyingPrice: 47,
-    sellingPrice: 55,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p53",
-    name: "2 in 1 Compact Matte Pourless",
-    code: "EGCP 6806 MP",
-    buyingPrice: 47,
-    sellingPrice: 55,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p54",
-    name: "2 in 1 Compact (AA)",
-    code: "EGCP 6806 AA",
-    buyingPrice: 81,
-    sellingPrice: 95,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["4 SHADES MIX"],
-    openingStock: 54,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p55",
-    name: "2 in 1 Compact (BB)",
-    code: "EGCP 6806 BB",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["4 SHADES MIX"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p56",
-    name: "2 in 1 Compact 001",
-    code: "EGCP 001",
-    buyingPrice: 81,
-    sellingPrice: 95,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["4 SHADES MIX"],
-    openingStock: 54,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p57",
-    name: "2 in 1 Compact 004",
-    code: "EGCP 004",
-    buyingPrice: 61,
-    sellingPrice: 72,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["4 SHADES MIX"],
-    openingStock: 54,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p58",
-    name: "Make Up Fixer",
-    code: "EGMF 6201",
-    buyingPrice: 64,
-    sellingPrice: 75,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["LEMON FIXER"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p59",
-    name: "Face Serum",
-    code: "EGFS 001",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 FLAVOUR"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p60",
-    name: "Matte Mousse Red Foundation",
-    code: "EGFD-6703 AA",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES (MIX)"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p61",
-    name: "CC Foundation",
-    code: "EGFD-6703 BB",
-    buyingPrice: 56,
-    sellingPrice: 66,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES (MIX IN 1 BOX)"],
-    openingStock: 108,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p62",
-    name: "Color Change Foundation",
-    code: "EGFD 6704",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["SINGLE SHADE"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p63",
-    name: "Golden Cap Foundation",
-    code: "EGFD 6706 AA",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES (MIX IN 1 BOX)"],
-    openingStock: 36,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p64",
-    name: "Pink Cap Foundation",
-    code: "EGFD 6706 BB",
-    buyingPrice: 70,
-    sellingPrice: 82,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["3 SHADES (MIX IN 1 BOX)"],
-    openingStock: 36,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p65",
-    name: "Eyeliner 204",
-    code: "EGEL 204",
-    buyingPrice: 38,
-    sellingPrice: 45,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["BLACK"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p66",
-    name: "Mascara 204",
-    code: "EGMS 204",
-    buyingPrice: 42,
-    sellingPrice: 50,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["BLACK"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p67",
-    name: "Eyeliner 205",
-    code: "EGEL 205",
-    buyingPrice: 38,
-    sellingPrice: 45,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["BLACK"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p68",
-    name: "Mascara 205",
-    code: "EGMS 205",
-    buyingPrice: 42,
-    sellingPrice: 50,
-    unit: "Pcs",
-    category: "Eye",
-    hasVariants: false,
-    shades: ["BLACK"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p69",
-    name: "Silicon Primer",
-    code: "EGPR-010",
-    buyingPrice: 60,
-    sellingPrice: 70,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["TRANSPARENT"],
-    openingStock: 108,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p70",
-    name: "Silky Primer",
-    code: "EGPR-011",
-    buyingPrice: 0,
-    sellingPrice: 0,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: false,
-    shades: ["TRANSPARENT"],
-    openingStock: 0,
-    lowStockThreshold: 0,
-  },
-  {
-    id: "p71",
-    name: "Lumi Primer",
-    code: "EGPR-012",
-    buyingPrice: 60,
-    sellingPrice: 70,
-    unit: "Pcs",
-    category: "Face",
-    hasVariants: true,
-    shades: ["GOLD GLITTER", "SILVER GLITTER", "PINK GLITTER"],
-    openingStock: 144,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p72",
-    name: "Nail Polish 003",
-    code: "EGNP 003",
-    buyingPrice: 17,
-    sellingPrice: 20,
-    unit: "Pcs",
-    category: "Nail Care",
-    hasVariants: true,
-    shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "METTALIC", "SPECIAL MATT", "NUDE PASTEL"],
-    openingStock: 72,
-    lowStockThreshold: 24,
-  },
-  {
-    id: "p73",
-    name: "Nail Polish 008",
-    code: "EGNP 008",
-    buyingPrice: 10,
-    sellingPrice: 12,
-    unit: "Pcs",
-    category: "Nail Care",
-    hasVariants: true,
-    shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "CHANDI CLR", "SPECIAL MATT", "NUDE PASTEL"],
-    openingStock: 36,
-    lowStockThreshold: 24,
-  },
+  { id: "rambagh", name: "Rambagh", area: "Central District - Zone A", location: "Central District", salesToday: 4500 },
+  { id: "city-center", name: "City Center", area: "Downtown Metro Hub", location: "Downtown", salesToday: 0 },
+  { id: "commercial-hub", name: "Commercial Hub", area: "Trade Tower Complex", location: "Trade Tower", salesToday: 0 },
+  { id: "station-road", name: "Station Road", area: "East Transit Line", location: "East Transit", salesToday: 0 },
+  { id: "gandhi-nagar", name: "Gandhi Nagar", area: "West Residential Belt", location: "West Belt", salesToday: 0 },
+  { id: "market-yard", name: "Market Yard", area: "South Wholesale Zone", location: "South Zone", salesToday: 0 },
 ];
 
 const seedTransactions: Transaction[] = [
@@ -10749,7 +9737,7 @@ const seedTransactions: Transaction[] = [
     id: "t1",
     type: "order",
     title: "Order: Gupta Provision Hub",
-    subtitle: "Rambagh â€¢ 10x Matte Lipstick 6008, 5x Mini Lipgloss, 2x Endless Black Kajal",
+    subtitle: "Rambagh • 10x Matte Lipstick 6008, 5x Mini Lipgloss, 2x Endless Black Kajal",
     amount: 345,
     time: "10:15 AM",
   },
@@ -10757,7 +9745,7 @@ const seedTransactions: Transaction[] = [
     id: "t2",
     type: "collection",
     title: "Collection: Apex Supermarket",
-    subtitle: "Mode: UPI â€¢ Ref: RCP-88902",
+    subtitle: "Mode: UPI • Ref: RCP-88902",
     amount: 5000,
     time: "11:30 AM",
   },
@@ -10786,8 +9774,8 @@ export function buildDefaults(): PersistedState {
     profile: seedProfile,
     dailyTarget: 60000,
     beats: seedBeats,
-    shops: seedShops,
-    products: seedProducts,
+    shops: seedShops,       // अब यह यहाँ बिल्कुल सही काम करेगा
+    products: seedProducts, // अब यह भी यहाँ बिल्कुल सही काम करेगा
     transactions: seedTransactions,
     orders: seedOrders,
     purchaseBills: [] as PurchaseBill[],
@@ -10796,6 +9784,26 @@ export function buildDefaults(): PersistedState {
     syncEnabled: true,
   };
 }
+
+
+
+--- shops.ts ---
+
+import type { Shop } from "@/lib/types";
+
+export const seedShops: Shop[] = [
+  { id: "s1", beatId: "rambagh", name: "Sharma Kirana Store", owner: "Ramesh Sharma", phone: "+91 98765 12345", address: "Shop 14, Main Bazaar, Rambagh", dues: 14500, status: "pending" },
+  { id: "s2", beatId: "rambagh", name: "Gupta Provision Hub", owner: "Suresh Gupta", phone: "+91 98123 45678", address: "45 Station Road, Rambagh", dues: 8200, status: "ordered", orderAmount: 345 },
+  { id: "s3", beatId: "rambagh", name: "Verma General Store", owner: "Anil Varma", phone: "+91 99887 76655", address: "Mall Road, Rambagh", dues: 17000, status: "paid", paidAmount: 5000 },
+  { id: "s4", beatId: "rambagh", name: "Royal Traders", owner: "Vikram Singh", phone: "+91 97654 32109", address: "Sector 3 Market, Rambagh", dues: 5400, status: "pending" },
+  { id: "s5", beatId: "city-center", name: "Apex Supermarket", owner: "Neha Jain", phone: "+91 90000 11111", address: "MG Road, City Center", dues: 22000, status: "pending" },
+  { id: "s6", beatId: "city-center", name: "Metro Cash & Carry", owner: "Rohit Mehta", phone: "+91 90000 22222", address: "Metro Plaza, City Center", dues: 18000, status: "pending" },
+  { id: "s7", beatId: "city-center", name: "Star Bazaar", owner: "Kavya Rao", phone: "+91 90000 33333", address: "Ring Road, City Center", dues: 14000, status: "pending" },
+  { id: "s8", beatId: "commercial-hub", name: "Prime Wholesale", owner: "Amit Shah", phone: "+91 90000 44444", address: "Tower A, Commercial Hub", dues: 30000, status: "pending" },
+  { id: "s9", beatId: "commercial-hub", name: "Unity Distributors", owner: "Sana Khan", phone: "+91 90000 55555", address: "Tower C, Commercial Hub", dues: 27000, status: "pending" },
+  { id: "s10", beatId: "station-road", name: "Transit Mart", owner: "Deepak Nair", phone: "+91 90000 66666", address: "Platform Lane, Station Road", dues: 9100, status: "pending" },
+  { id: "s11", beatId: "station-road", name: "Junction Stores", owner: "Priya Das", phone: "+91 90000 77777", address: "Exit Gate, Station Road", dues: 7000, status: "pending" },
+];
 
 
 
@@ -11088,7 +10096,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [googleEmail, setGoogleEmail] = useState("");
 
   useEffect(() => {
-    // 1. à¤…à¤¬ loadState Async à¤¹à¥‹ à¤—à¤¯à¤¾ à¤¹à¥ˆ, à¤‡à¤¸à¤²à¤¿à¤ then() à¤•à¤¾ à¤‡à¤¸à¥à¤¤à¥‡à¤®à¤¾à¤² à¤•à¤¿à¤¯à¤¾ à¤¹à¥ˆ
+    // 1. अब loadState Async हो गया है, इसलिए then() का इस्तेमाल किया है
     loadState(buildDefaults()).then((state) => {
       setProfile(state.profile);
       setDailyTarget(state.dailyTarget);
@@ -11292,7 +10300,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         addTransaction({
           type: "order",
           title: `Order: ${shop.name}`,
-          subtitle: `${beatName} â€¢ ${order.summary}`,
+          subtitle: `${beatName} • ${order.summary}`,
           amount: order.total,
         });
       },
@@ -11351,7 +10359,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           let next = [...prev];
 
           if (remainingAction === "backorder" && remainingLines.length > 0) {
-            // à¤¬à¤šà¥‡ à¤¹à¥à¤ à¤†à¤‡à¤Ÿà¤®à¥à¤¸ à¤•à¤¾ à¤¨à¤¯à¤¾ à¤†à¤°à¥à¤¡à¤° (Partially Dispatched à¤Ÿà¥ˆà¤— à¤•à¥‡ à¤¸à¤¾à¤¥)
+            // बचे हुए आइटम्स का नया आर्डर (Partially Dispatched टैग के साथ)
             const backOrder: Order = {
               ...order,
               id: createId("ord"),
@@ -11362,14 +10370,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                 status: "pending" 
               })),
               total: remainingLines.reduce((sum, l) => sum + (l.pendingQty * l.price), 0),
-              status: "partial", // à¤‡à¤¸à¤¸à¥‡ "Partially Dispatched" à¤Ÿà¥ˆà¤— à¤¦à¤¿à¤–à¥‡à¤—à¤¾
+              status: "partial", // इससे "Partially Dispatched" टैग दिखेगा
               createdAt: new Date().toISOString(),
               backOrderOf: orderId
             };
             next = [backOrder, ...next];
           }
 
-          // à¤“à¤°à¤¿à¤œà¤¿à¤¨à¤² à¤†à¤°à¥à¤¡à¤° à¤•à¥‹ à¤…à¤ªà¤¡à¥‡à¤Ÿ à¤•à¤°à¥‡à¤‚ (à¤¸à¤¿à¤°à¥à¤« à¤¡à¤¿à¤¸à¥à¤ªà¥ˆà¤š à¤¹à¥à¤ à¤†à¤‡à¤Ÿà¤®à¥à¤¸ à¤°à¤–à¥‡à¤‚ à¤”à¤° à¤¸à¥à¤Ÿà¥‡à¤Ÿà¤¸ à¤¬à¤¦à¤²à¥‡à¤‚)
+          // ओरिजिनल आर्डर को अपडेट करें (सिर्फ डिस्पैच हुए आइटम्स रखें और स्टेटस बदलें)
           next = next.map(o => {
             if (o.id === orderId) {
               return {
@@ -11417,7 +10425,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         addTransaction({
           type: "collection",
           title: `Collection: ${shop?.name ?? "Shop"}`,
-          subtitle: `Mode: ${mode} â€¢ Ref: RCP-${Math.floor(
+          subtitle: `Mode: ${mode} • Ref: RCP-${Math.floor(
             10000 + Math.random() * 89999,
           )}`,
           amount,
@@ -11479,7 +10487,7 @@ export function useStore() {
 }
 
 export function formatINR(amount: number): string {
-  return `â‚¹${amount.toLocaleString("en-IN", {
+  return `₹${amount.toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -11507,8 +10515,8 @@ export type ScreenName =
   | "dispatch"
   | "invoice"
   | "dispatchHistory"
-  | "deliveryMenu"    // <-- à¤¨à¤¯à¤¾ à¤œà¥‹à¥œà¤¾ à¤—à¤¯à¤¾
-  | "ordersHistory";  // <-- à¤¨à¤¯à¤¾ à¤œà¥‹à¥œà¤¾ à¤—à¤¯à¤¾
+  | "deliveryMenu"    // <-- नया जोड़ा गया
+  | "ordersHistory";  // <-- नया जोड़ा गया
 
 export type ScreenEntry = {
   name: ScreenName;
@@ -11529,8 +10537,8 @@ export type Shop = {
   orderAmount?: number;
   paidAmount?: number;
   lastSellingPrices?: Record<string, number>;
-  whatsapp?: string;       // <-- à¤¨à¤¯à¤¾ à¤œà¥‹à¥œà¤¾ à¤—à¤¯à¤¾
-  lastOrderDate?: string;  // <-- à¤¨à¤¯à¤¾ à¤œà¥‹à¥œà¤¾ à¤—à¤¯à¤¾
+  whatsapp?: string;       // <-- नया जोड़ा गया
+  lastOrderDate?: string;  // <-- नया जोड़ा गया
 };
 
 export type Beat = {
@@ -11982,7 +10990,7 @@ export function createDispatch(
     shopName: order.shopName,
     beatName: order.beatName,
     executive: input.executive || profile.name,
-    vehicle: input.vehicle || "â€”",
+    vehicle: input.vehicle || "—",
     invoiceNumber: `INV-${new Date(createdAt).getFullYear()}-${String(
       existingDispatches.length + 1,
     ).padStart(4, "0")}`,
@@ -12004,7 +11012,7 @@ export function createDispatch(
       type: "outward" as const,
       productId: line.productId,
       qty: line.dispatchedQty,
-      note: `Dispatched to ${order.shopName} â€¢ ${dispatch.invoiceNumber}`,
+      note: `Dispatched to ${order.shopName} • ${dispatch.invoiceNumber}`,
       at: createdAt,
     }));
 
@@ -12379,7 +11387,7 @@ export function createPurchaseBill(
       type: "inward",
       productId: line.productId,
       qty: line.qty,
-      note: `Received from ${bill.supplier} â€¢ ${bill.invoiceNumber}`,
+      note: `Received from ${bill.supplier} • ${bill.invoiceNumber}`,
       at: createdAt,
     }),
   );
@@ -12498,54 +11506,6 @@ export function applyCollectionToShop(
 
 
 
---- index.tsx ---
-
-import { createFileRoute } from "@tanstack/react-router";
-import { AppShell } from "@/components/app-shell";
-
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "SalesBeat â€” Distribution Assistant" },
-      { name: "description", content: "Field sales distribution assistant for managing beats, shops, orders, collections and product catalogue." },
-      { property: "og:title", content: "SalesBeat â€” Distribution Assistant" },
-      { property: "og:description", content: "Field sales distribution assistant for managing beats, shops, orders, collections and product catalogue." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: Index,
-});
-
-function Index() {
-  return <AppShell />;
-}
-
-
-
---- mcp.ts ---
-
-// AUTO-GENERATED by @lovable.dev/mcp-js â€” do not edit. Regenerated by the Vite plugin.
-// To take ownership, delete this banner line; the plugin then leaves the file alone.
-// route: /mcp
-// emitted to: src/routes/mcp.ts
-
-import { createFileRoute } from "@tanstack/react-router";
-
-import { createTanStackMcpHandler } from "@lovable.dev/mcp-js/stacks/tanstack";
-
-import mcp from "../lib/mcp/index";
-
-export const Route = createFileRoute("/mcp")({
-  server: {
-    handlers: {
-      ANY: createTanStackMcpHandler(mcp, { resourcePath: "/mcp", metadataPath: "/.well-known/oauth-protected-resource", trustForwardedHost: true }),
-    },
-  },
-});
-
-
-
 --- __root.tsx ---
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -12627,15 +11587,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" },
-      { title: "SalesBeat â€” Distribution Assistant" },
+      { title: "SalesBeat — Distribution Assistant" },
       { name: "description", content: "Field sales distribution assistant for managing beats, shops, orders, collections and product catalogue." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "SalesBeat â€” Distribution Assistant" },
+      { property: "og:title", content: "SalesBeat — Distribution Assistant" },
       { property: "og:description", content: "Field sales distribution assistant for managing beats, shops, orders, collections and product catalogue." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "theme-color", content: "#1565c0" },
+      // 👇 यहाँ मैंने डार्क मोड ब्लॉक करने वाला कोड जोड़ दिया है 👇
+      { name: "color-scheme", content: "light" },
     ],
     links: [
       {
@@ -12678,9 +11640,57 @@ function RootComponent() {
 
 
 
+--- index.tsx ---
+
+import { createFileRoute } from "@tanstack/react-router";
+import { AppShell } from "@/components/app-shell";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "SalesBeat — Distribution Assistant" },
+      { name: "description", content: "Field sales distribution assistant for managing beats, shops, orders, collections and product catalogue." },
+      { property: "og:title", content: "SalesBeat — Distribution Assistant" },
+      { property: "og:description", content: "Field sales distribution assistant for managing beats, shops, orders, collections and product catalogue." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: Index,
+});
+
+function Index() {
+  return <AppShell />;
+}
+
+
+
+--- mcp.ts ---
+
+// AUTO-GENERATED by @lovable.dev/mcp-js — do not edit. Regenerated by the Vite plugin.
+// To take ownership, delete this banner line; the plugin then leaves the file alone.
+// route: /mcp
+// emitted to: src/routes/mcp.ts
+
+import { createFileRoute } from "@tanstack/react-router";
+
+import { createTanStackMcpHandler } from "@lovable.dev/mcp-js/stacks/tanstack";
+
+import mcp from "../lib/mcp/index";
+
+export const Route = createFileRoute("/mcp")({
+  server: {
+    handlers: {
+      ANY: createTanStackMcpHandler(mcp, { resourcePath: "/mcp", metadataPath: "/.well-known/oauth-protected-resource", trustForwardedHost: true }),
+    },
+  },
+});
+
+
+
 --- list-tools.ts ---
 
-// AUTO-GENERATED by @lovable.dev/mcp-js â€” do not edit. Regenerated by the Vite plugin.
+// AUTO-GENERATED by @lovable.dev/mcp-js — do not edit. Regenerated by the Vite plugin.
 // To take ownership, delete this banner line; the plugin then leaves the file alone.
 // route: /.mcp/list-tools
 // emitted to: src/routes/[.mcp]/list-tools.ts
@@ -12704,7 +11714,7 @@ export const Route = createFileRoute("/.mcp/list-tools")({
 
 --- $tool.ts ---
 
-// AUTO-GENERATED by @lovable.dev/mcp-js â€” do not edit. Regenerated by the Vite plugin.
+// AUTO-GENERATED by @lovable.dev/mcp-js — do not edit. Regenerated by the Vite plugin.
 // To take ownership, delete this banner line; the plugin then leaves the file alone.
 // route: /.mcp/invoke-tool/$tool
 // emitted to: src/routes/[.mcp]/invoke-tool/$tool.ts
@@ -12728,7 +11738,7 @@ export const Route = createFileRoute("/.mcp/invoke-tool/$tool")({
 
 --- oauth-protected-resource.ts ---
 
-// AUTO-GENERATED by @lovable.dev/mcp-js â€” do not edit. Regenerated by the Vite plugin.
+// AUTO-GENERATED by @lovable.dev/mcp-js — do not edit. Regenerated by the Vite plugin.
 // To take ownership, delete this banner line; the plugin then leaves the file alone.
 // route: /.well-known/oauth-protected-resource
 // emitted to: src/routes/[.well-known]/oauth-protected-resource.ts

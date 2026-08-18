@@ -1,4 +1,5 @@
 import { dbService } from "./sqlite";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import type { Profile, Beat, Shop, Product, Transaction, Order, PurchaseBill, StockMovement, DispatchRecord } from "./types";
 
 export interface AppStateData {
@@ -63,6 +64,7 @@ export async function saveState(state: AppStateData): Promise<void> {
   try {
     await dbService.initializeDatabase();
 
+    // 1. SQLite डेटाबेस में सेव करें
     await Promise.all([
       dbService.saveTableData("beats", state.beats),
       dbService.saveTableData("shops", state.shops),
@@ -77,6 +79,20 @@ export async function saveState(state: AppStateData): Promise<void> {
       dbService.setMeta("syncEnabled", state.syncEnabled),
       dbService.setMeta("googleEmail", state.googleEmail),
     ]);
+
+    // 2. फोन के फाइल मैनेजर (Documents/DPAS/data.json) में भी बैकअप फाइल सेव करें
+    try {
+      await Filesystem.writeFile({
+        path: "DPAS/data.json",
+        data: JSON.stringify(state, null, 2),
+        directory: Directory.Documents,
+        encoding: Encoding.UTF8,
+        recursive: true,
+      });
+    } catch (fsError) {
+      console.error("Failed to write DPAS backup file to filesystem:", fsError);
+    }
+
   } catch (error) {
     console.error("Failed to save state to SQLite:", error);
   }

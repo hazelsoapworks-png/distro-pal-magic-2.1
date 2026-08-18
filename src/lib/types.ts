@@ -16,8 +16,8 @@ export type ScreenName =
   | "dispatch"
   | "invoice"
   | "dispatchHistory"
-  | "deliveryMenu"    // <-- नया जोड़ा गया
-  | "ordersHistory";  // <-- नया जोड़ा गया
+  | "deliveryMenu"
+  | "ordersHistory";
 
 export type ScreenEntry = {
   name: ScreenName;
@@ -38,8 +38,8 @@ export type Shop = {
   orderAmount?: number;
   paidAmount?: number;
   lastSellingPrices?: Record<string, number>;
-  whatsapp?: string;       // <-- नया जोड़ा गया
-  lastOrderDate?: string;  // <-- नया जोड़ा गया
+  whatsapp?: string;
+  lastOrderDate?: string;
 };
 
 export type Beat = {
@@ -93,8 +93,8 @@ export type OrderLineStatus = "pending" | "delivered" | "cancelled" | "backorder
 export type OrderLine = {
   productId: string;
   qty: number;
-  price: number; // Selling Price
-  buyingPrice?: number; // Margin track karne ke liye
+  price: number;
+  buyingPrice?: number;
   dispatchedQty?: number;
   status?: OrderLineStatus;
 };
@@ -108,7 +108,7 @@ export type Order = {
   beatName: string;
   lines: OrderLine[];
   total: number;
-  totalMargin?: number; // Is order par total profit
+  totalMargin?: number;
   summary: string;
   status: OrderStatus;
   createdAt: string;
@@ -145,12 +145,6 @@ export type DispatchRecord = {
 
 export const TAX_RATE = 0.18;
 
-export const DISTRIBUTOR = {
-  name: "SalesBeat Distributors Pvt. Ltd.",
-  gstin: "27AABCS1429B1ZX",
-  address: "Warehouse 12, Industrial Estate, Pune 411019",
-};
-
 export type PurchaseBillLine = {
   productId: string;
   qty: number;
@@ -185,11 +179,13 @@ export type StockLevels = {
 
 export type Profile = {
   name: string;
+  companyName: string; // डिस्ट्रीब्यूटरशिप या फर्म का नाम
   role: string;
   zone: string;
   online: boolean;
   phone: string;
   address: string;
+  gstin: string; // जीएसटी नंबर
 };
 
 export type PersistedState = {

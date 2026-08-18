@@ -67,12 +67,16 @@ export function createDispatch(
 
   const remainingLines = lines.filter((line) => line.remainingQty > 0);
   const fullyDispatched = remainingLines.length === 0;
-  const subTotal = lines.reduce(
+
+  // 18% GST Inclusive Reverse Calculation for Dispatch / Invoice
+  const totalInclusive = lines.reduce(
     (total, line) => total + line.dispatchedQty * line.price,
     0,
   );
-  const tax = Math.round(subTotal * 0.18 * 100) / 100;
-  const grandTotal = subTotal + tax;
+  
+  const grandTotal = Math.round(totalInclusive * 100) / 100;
+  const subTotal = Math.round((grandTotal / 1.18) * 100) / 100;
+  const tax = Math.round((grandTotal - subTotal) * 100) / 100;
 
   const dispatch: DispatchRecord = {
     id: dispatchId,

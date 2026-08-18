@@ -2,7 +2,7 @@ import type { Profile } from "@/lib/types";
 
 export type EditableProfileFields = Pick<
   Profile,
-  "name" | "phone" | "address"
+  "name" | "companyName" | "phone" | "address" | "gstin"
 >;
 
 export function updateProfile(

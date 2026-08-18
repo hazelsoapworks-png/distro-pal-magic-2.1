@@ -1,9 +1,9 @@
-import { useStore, formatINR, DISTRIBUTOR, TAX_RATE } from "@/lib/store";
+import { useStore, formatINR, TAX_RATE } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { ProductThumb } from "@/components/product-thumb";
 
 export function InvoiceScreen({ dispatchId }: { dispatchId?: string }) {
-  const { dispatches, products, shops } = useStore();
+  const { dispatches, products, shops, profile } = useStore();
   const d = dispatches.find((x) => x.id === dispatchId);
 
   if (!d) {
@@ -27,10 +27,13 @@ export function InvoiceScreen({ dispatchId }: { dispatchId?: string }) {
         <div className="rounded-2xl bg-card p-4 sm:p-6 shadow-sm ring-1 ring-black/5">
           <div className="flex flex-col md:flex-row md:justify-between gap-4 md:gap-8">
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-bold text-foreground truncate">{DISTRIBUTOR.name}</p>
-              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground line-clamp-2">{DISTRIBUTOR.address}</p>
+              <p className="text-sm sm:text-base font-bold text-foreground truncate">{profile.companyName}</p>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground line-clamp-2">{profile.address}</p>
               <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
-                GSTIN: <span className="font-medium text-foreground">{DISTRIBUTOR.gstin}</span>
+                GSTIN: <span className="font-medium text-foreground">{profile.gstin}</span>
+              </p>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+                Proprietor: <span className="font-medium text-foreground">{profile.name}</span> ({profile.phone})
               </p>
             </div>
 

@@ -33,15 +33,20 @@ export function MoreScreen() {
   const [targetValue, setTargetValue] = useState(String(dailyTarget));
   const [profileOpen, setProfileOpen] = useState(false);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
+  
+  // Profile edit states including Company Name and GSTIN
   const [name, setName] = useState(profile.name);
+  const [companyName, setCompanyName] = useState(profile.companyName);
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
+  const [gstin, setGstin] = useState(profile.gstin);
+
   const googleConnected = googleEmail.trim().length > 0;
 
   const openDpasFolder = async () => {
     try {
       const stats = await Filesystem.stat({
-        path: "DPAS/data.json", // यहाँ SalesBeat की जगह DPAS करना है
+        path: "DPAS/data.json",
         directory: Directory.Documents,
       });
       alert(`Folder Found! File size: ${stats.size} bytes. Location: Documents/DPAS/data.json`);
@@ -58,14 +63,22 @@ export function MoreScreen() {
 
   const openProfile = () => {
     setName(profile.name);
+    setCompanyName(profile.companyName);
     setPhone(profile.phone);
     setAddress(profile.address);
+    setGstin(profile.gstin);
     setProfileOpen(true);
   };
 
   const saveProfile = () => {
     if (!name.trim()) return;
-    updateProfile({ name: name.trim(), phone: phone.trim(), address: address.trim() });
+    updateProfile({
+      name: name.trim(),
+      companyName: companyName.trim(),
+      phone: phone.trim(),
+      address: address.trim(),
+      gstin: gstin.trim(),
+    });
     setProfileOpen(false);
   };
 
@@ -81,9 +94,9 @@ export function MoreScreen() {
               <UserRound className="size-8 sm:size-10" />
             </span>
             <div className="min-w-0 flex-1 pr-2">
-              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{profile.name}</p>
-              <p className="text-sm sm:text-base text-muted-foreground truncate">{profile.role}</p>
-              <p className="mt-0.5 text-sm sm:text-base font-medium text-primary truncate">{profile.zone}</p>
+              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{profile.companyName || profile.name}</p>
+              <p className="text-sm sm:text-base text-muted-foreground truncate">Proprietor: {profile.name}</p>
+              <p className="mt-0.5 text-xs sm:text-sm font-semibold text-primary truncate">GSTIN: {profile.gstin || "Not Set"}</p>
             </div>
             <button
               type="button"
@@ -174,12 +187,21 @@ export function MoreScreen() {
 
       {/* Edit profile Modal */}
       <Modal open={profileOpen} onClose={() => setProfileOpen(false)}>
-        <h3 className="text-xl sm:text-2xl font-bold text-foreground">Edit Profile</h3>
+        <h3 className="text-xl sm:text-2xl font-bold text-foreground">Edit Distributor Profile</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Saved on this device and kept after restart.
+          Update your firm details, GSTIN, and contact info for invoices.
         </p>
-        <div className="mt-4 sm:mt-5 space-y-3 sm:space-y-4">
-          <Labelled label="Name">
+        <div className="mt-4 sm:mt-5 space-y-3 sm:space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          <Labelled label="Company / Firm Name">
+            <input
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="e.g. SalesBeat Distributors"
+              className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+            />
+          </Labelled>
+
+          <Labelled label="Proprietor / Owner Name">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -187,6 +209,16 @@ export function MoreScreen() {
               className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
             />
           </Labelled>
+
+          <Labelled label="GSTIN Number">
+            <input
+              value={gstin}
+              onChange={(e) => setGstin(e.target.value)}
+              placeholder="27AABCS1429B1ZX"
+              className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground uppercase outline-none ring-1 ring-transparent focus:ring-primary/40"
+            />
+          </Labelled>
+
           <Labelled label="Mobile Number">
             <input
               value={phone}
@@ -196,12 +228,13 @@ export function MoreScreen() {
               className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
             />
           </Labelled>
-          <Labelled label="Address">
+
+          <Labelled label="Business Address">
             <textarea
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               rows={2}
-              placeholder="Address"
+              placeholder="Full office or warehouse address"
               className="w-full resize-none rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
             />
           </Labelled>

@@ -26,12 +26,26 @@ export function createOrder(
   const enrichedLines = lines.map((line) => {
     const product = products.find(p => p.id === line.productId);
     const buyingPrice = line.buyingPrice ?? product?.buyingPrice ?? 0;
-    const marginPerItem = line.price - buyingPrice;
+    
+    // 18% GST Inclusive Reverse Calculation
+    // line.price is inclusive of GST (e.g., ₹22)
+    const inclusivePrice = line.price;
+    const basePrice = inclusivePrice / 1.18; // Taxable value without GST
+    const gstAmountPerItem = inclusivePrice - basePrice;
 
-    total += line.qty * line.price;
+    // Margin calculation based on base price vs buying price
+    const marginPerItem = basePrice - buyingPrice;
+
+    total += line.qty * inclusivePrice;
     totalMargin += line.qty * marginPerItem;
 
-    return { ...line, buyingPrice };
+    return { 
+      ...line, 
+      price: inclusivePrice, // Final inclusive price
+      basePrice: Number(basePrice.toFixed(2)),
+      gstAmount: Number(gstAmountPerItem.toFixed(2)),
+      buyingPrice 
+    };
   });
 
   const summary = enrichedLines
@@ -44,8 +58,8 @@ export function createOrder(
     shopName: shop.name,
     beatName,
     lines: enrichedLines,
-    total,
-    totalMargin,
+    total: Number(total.toFixed(2)),
+    totalMargin: Number(totalMargin.toFixed(2)),
     summary,
     status: "pending",
     createdAt,

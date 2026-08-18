@@ -1,21 +1,13 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-
 buildscript {
-    
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.2'
-        classpath 'com.google.gms:google-services:4.4.2'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath 'com.android.tools.build:gradle:8.13.2'
+        classpath 'com.google.gms:google-services:4.4.0'
     }
 }
-
-apply from: "variables.gradle"
 
 allprojects {
     repositories {
@@ -26,4 +18,19 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+ext {
+    minSdkVersion = 22
+    compileSdkVersion = 35
+    targetSdkVersion = 35
+    
+    // प्लगइंस द्वारा मांगे जाने वाले सभी वर्जन्स यहाँ डिफाइन कर दिए गए हैं
+    androidxAppCompatVersion = '1.6.1'
+    androidxCoreKTXVersion = '1.12.0'
+    androidxCoordinatorLayoutVersion = '1.2.0'
+    androidxJunitVersion = '1.1.5'
+    androidxEspressoCoreVersion = '3.5.1'
+    junitVersion = '4.13.2'
+    coreSplashScreenVersion = '1.0.1'
 }
