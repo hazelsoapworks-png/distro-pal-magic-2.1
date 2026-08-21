@@ -11,12 +11,22 @@ import {
   MapPin,
   LogOut,
   Chrome,
+  CloudUpload,
+  CloudDownload,
+  Loader2
 } from "lucide-react";
-import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { useStore, formatINR } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { Modal } from "@/components/modal";
-import { signInWithGoogle, signOutGoogle } from "@/lib/google";
+import { 
+  signInWithGoogle, 
+  signOutGoogle,
+  getValidAccessToken,
+  uploadToGoogleDrive,
+  downloadFromGoogleDrive
+} from "@/lib/google";
+import { saveState } from "@/lib/persistence";
 
 export function MoreScreen() {
   const {
@@ -28,11 +38,21 @@ export function MoreScreen() {
     setGoogleEmail,
     dailyTarget,
     setDailyTarget,
+    beats,
+    shops,
+    products,
+    transactions,
+    orders,
+    purchaseBills,
+    stockMovements,
+    dispatches
   } = useStore();
+  
   const [targetOpen, setTargetOpen] = useState(false);
   const [targetValue, setTargetValue] = useState(String(dailyTarget));
   const [profileOpen, setProfileOpen] = useState(false);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Profile edit states including Company Name and GSTIN
   const [name, setName] = useState(profile.name);
@@ -82,6 +102,73 @@ export function MoreScreen() {
     setProfileOpen(false);
   };
 
+  // --- DRIVE BACKUP & RESTORE HANDLERS ---
+  const handleBackupToDrive = async () => {
+    setIsSyncing(true);
+    try {
+      const token = await getValidAccessToken();
+      if (!token) {
+        alert("Google permission error. Please sign out and sign in again.");
+        setIsSyncing(false);
+        return;
+      }
+
+      const fullState = {
+        profile, dailyTarget, beats, shops, products, transactions,
+        orders, purchaseBills, stockMovements, dispatches, syncEnabled, googleEmail
+      };
+
+      const success = await uploadToGoogleDrive(JSON.stringify(fullState), token);
+      if (success) {
+        alert("✅ Data successfully backed up to Google Drive!");
+      } else {
+        alert("❌ Failed to backup data to Drive.");
+      }
+    } catch (error) {
+      alert("An error occurred during backup.");
+    }
+    setIsSyncing(false);
+  };
+
+  const handleRestoreFromDrive = async () => {
+    const confirmRestore = window.confirm("Are you sure? This will overwrite your current phone data with the Google Drive backup.");
+    if (!confirmRestore) return;
+
+    setIsSyncing(true);
+    try {
+      const token = await getValidAccessToken();
+      if (!token) {
+        alert("Google permission error. Please sign out and sign in again.");
+        setIsSyncing(false);
+        return;
+      }
+
+      const jsonStr = await downloadFromGoogleDrive(token);
+      
+      if (jsonStr) {
+        // Direct local file write to DPAS/data.json
+        await Filesystem.writeFile({
+          path: "DPAS/data.json",
+          data: jsonStr,
+          directory: Directory.Documents,
+          encoding: Encoding.UTF8,
+        });
+
+        const parsedData = JSON.parse(jsonStr);
+        await saveState(parsedData);
+
+        alert("✅ Data restored successfully! App will now restart.");
+        window.location.reload();
+      } else {
+        alert("❌ No backup file found on Google Drive.");
+      }
+    } catch (error) {
+      console.error("Restore Error:", error);
+      alert("An error occurred during restore.");
+    }
+    setIsSyncing(false);
+  };
+
   return (
     <div className="pb-6 max-w-7xl mx-auto w-full">
       <AppHeader title="Executive Settings & Profile" rounded />
@@ -126,33 +213,62 @@ export function MoreScreen() {
           )}
         </div>
 
-        {/* Sync toggle */}
-        <div className="mt-3 sm:mt-4 flex items-center gap-3 sm:gap-4 rounded-2xl bg-card p-4 sm:p-5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
-          <span className="flex size-11 sm:size-12 items-center justify-center rounded-full bg-brand-soft text-primary shrink-0">
-            <RefreshCcw className="size-5 sm:size-6" />
-          </span>
-          <div className="flex-1 min-w-0 pr-2">
-            <p className="font-semibold text-foreground text-base sm:text-lg truncate">Real-Time Data Sync</p>
-            <p className="text-sm sm:text-base text-muted-foreground truncate">
-              {syncEnabled ? "Connected to Central ERP" : "Sync paused"}
-            </p>
-          </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={syncEnabled}
-            aria-label="Toggle real-time data sync"
-            onClick={() => setSyncEnabled(!syncEnabled)}
-            className={`relative h-7 w-12 sm:h-8 sm:w-14 shrink-0 rounded-full transition-colors cursor-pointer ${
-              syncEnabled ? "bg-primary" : "bg-black/20"
-            }`}
-          >
-            <span
-              className={`absolute top-1 sm:top-1.5 size-5 rounded-full bg-card transition-all ${
-                syncEnabled ? "left-6 sm:left-8" : "left-1 sm:left-1.5"
+        {/* Sync toggle & Drive Controls */}
+        <div className="mt-3 sm:mt-4 flex flex-col gap-3 rounded-2xl bg-card p-4 sm:p-5 shadow-sm ring-1 ring-black/5 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="flex size-11 sm:size-12 items-center justify-center rounded-full bg-brand-soft text-primary shrink-0">
+              {isSyncing ? <Loader2 className="size-5 sm:size-6 animate-spin" /> : <RefreshCcw className="size-5 sm:size-6" />}
+            </span>
+            <div className="flex-1 min-w-0 pr-2">
+              <p className="font-semibold text-foreground text-base sm:text-lg truncate">Google Drive Sync</p>
+              <p className="text-sm sm:text-base text-muted-foreground truncate">
+                {syncEnabled ? "Cloud Sync Active" : "Sync paused"}
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={syncEnabled}
+              aria-label="Toggle real-time data sync"
+              onClick={() => {
+                setSyncEnabled(!syncEnabled);
+              }}
+              className={`relative h-7 w-12 sm:h-8 sm:w-14 shrink-0 rounded-full transition-colors cursor-pointer ${
+                syncEnabled ? "bg-primary" : "bg-black/20"
               }`}
-            />
-          </button>
+            >
+              <span
+                className={`absolute top-1 sm:top-1.5 size-5 rounded-full bg-card transition-all ${
+                  syncEnabled ? "left-6 sm:left-8" : "left-1 sm:left-1.5"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Upload / Download Buttons shown only when Sync is ON */}
+          {syncEnabled && googleConnected && (
+            <div className="flex items-center gap-3 border-t border-black/5 pt-3 mt-1">
+               <button
+                 onClick={handleBackupToDrive}
+                 disabled={isSyncing}
+                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary/10 py-2.5 text-sm font-semibold text-primary cursor-pointer hover:bg-primary/20 transition-colors disabled:opacity-50"
+               >
+                 <CloudUpload className="size-4" /> Backup Now
+               </button>
+               <button
+                 onClick={handleRestoreFromDrive}
+                 disabled={isSyncing}
+                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-warning/10 py-2.5 text-sm font-semibold text-warning cursor-pointer hover:bg-warning/20 transition-colors disabled:opacity-50"
+               >
+                 <CloudDownload className="size-4" /> Restore Data
+               </button>
+            </div>
+          )}
+          {syncEnabled && !googleConnected && (
+             <div className="mt-1 border-t border-black/5 pt-3 text-sm text-warning font-medium text-center">
+               Please sign in to Google (below) to use Drive sync.
+             </div>
+          )}
         </div>
 
         <h2 className="mb-3 sm:mb-4 mt-6 sm:mt-8 text-lg sm:text-xl font-bold text-foreground">Configuration & Tools</h2>

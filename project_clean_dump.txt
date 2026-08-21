@@ -2784,12 +2784,12 @@ function StockCell({ label, value, tone }: { label: string; value: number; tone:
 
 --- invoice-screen.tsx ---
 
-import { useStore, formatINR, DISTRIBUTOR, TAX_RATE } from "@/lib/store";
+import { useStore, formatINR, TAX_RATE } from "@/lib/store";
 import { AppHeader } from "@/components/app-header";
 import { ProductThumb } from "@/components/product-thumb";
 
 export function InvoiceScreen({ dispatchId }: { dispatchId?: string }) {
-  const { dispatches, products, shops } = useStore();
+  const { dispatches, products, shops, profile } = useStore();
   const d = dispatches.find((x) => x.id === dispatchId);
 
   if (!d) {
@@ -2813,10 +2813,13 @@ export function InvoiceScreen({ dispatchId }: { dispatchId?: string }) {
         <div className="rounded-2xl bg-card p-4 sm:p-6 shadow-sm ring-1 ring-black/5">
           <div className="flex flex-col md:flex-row md:justify-between gap-4 md:gap-8">
             <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-bold text-foreground truncate">{DISTRIBUTOR.name}</p>
-              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground line-clamp-2">{DISTRIBUTOR.address}</p>
+              <p className="text-sm sm:text-base font-bold text-foreground truncate">{profile.companyName}</p>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground line-clamp-2">{profile.address}</p>
               <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
-                GSTIN: <span className="font-medium text-foreground">{DISTRIBUTOR.gstin}</span>
+                GSTIN: <span className="font-medium text-foreground">{profile.gstin}</span>
+              </p>
+              <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
+                Proprietor: <span className="font-medium text-foreground">{profile.name}</span> ({profile.phone})
               </p>
             </div>
 
@@ -2949,15 +2952,20 @@ export function MoreScreen() {
   const [targetValue, setTargetValue] = useState(String(dailyTarget));
   const [profileOpen, setProfileOpen] = useState(false);
   const [googleDialogOpen, setGoogleDialogOpen] = useState(false);
+  
+  // Profile edit states including Company Name and GSTIN
   const [name, setName] = useState(profile.name);
+  const [companyName, setCompanyName] = useState(profile.companyName);
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
+  const [gstin, setGstin] = useState(profile.gstin);
+
   const googleConnected = googleEmail.trim().length > 0;
 
   const openDpasFolder = async () => {
     try {
       const stats = await Filesystem.stat({
-        path: "DPAS/data.json", // यहाँ SalesBeat की जगह DPAS करना है
+        path: "DPAS/data.json",
         directory: Directory.Documents,
       });
       alert(`Folder Found! File size: ${stats.size} bytes. Location: Documents/DPAS/data.json`);
@@ -2974,14 +2982,22 @@ export function MoreScreen() {
 
   const openProfile = () => {
     setName(profile.name);
+    setCompanyName(profile.companyName);
     setPhone(profile.phone);
     setAddress(profile.address);
+    setGstin(profile.gstin);
     setProfileOpen(true);
   };
 
   const saveProfile = () => {
     if (!name.trim()) return;
-    updateProfile({ name: name.trim(), phone: phone.trim(), address: address.trim() });
+    updateProfile({
+      name: name.trim(),
+      companyName: companyName.trim(),
+      phone: phone.trim(),
+      address: address.trim(),
+      gstin: gstin.trim(),
+    });
     setProfileOpen(false);
   };
 
@@ -2997,9 +3013,9 @@ export function MoreScreen() {
               <UserRound className="size-8 sm:size-10" />
             </span>
             <div className="min-w-0 flex-1 pr-2">
-              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{profile.name}</p>
-              <p className="text-sm sm:text-base text-muted-foreground truncate">{profile.role}</p>
-              <p className="mt-0.5 text-sm sm:text-base font-medium text-primary truncate">{profile.zone}</p>
+              <p className="text-lg sm:text-xl font-bold text-foreground truncate">{profile.companyName || profile.name}</p>
+              <p className="text-sm sm:text-base text-muted-foreground truncate">Proprietor: {profile.name}</p>
+              <p className="mt-0.5 text-xs sm:text-sm font-semibold text-primary truncate">GSTIN: {profile.gstin || "Not Set"}</p>
             </div>
             <button
               type="button"
@@ -3090,12 +3106,21 @@ export function MoreScreen() {
 
       {/* Edit profile Modal */}
       <Modal open={profileOpen} onClose={() => setProfileOpen(false)}>
-        <h3 className="text-xl sm:text-2xl font-bold text-foreground">Edit Profile</h3>
+        <h3 className="text-xl sm:text-2xl font-bold text-foreground">Edit Distributor Profile</h3>
         <p className="mt-1 text-sm text-muted-foreground">
-          Saved on this device and kept after restart.
+          Update your firm details, GSTIN, and contact info for invoices.
         </p>
-        <div className="mt-4 sm:mt-5 space-y-3 sm:space-y-4">
-          <Labelled label="Name">
+        <div className="mt-4 sm:mt-5 space-y-3 sm:space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+          <Labelled label="Company / Firm Name">
+            <input
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="e.g. SalesBeat Distributors"
+              className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
+            />
+          </Labelled>
+
+          <Labelled label="Proprietor / Owner Name">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -3103,6 +3128,16 @@ export function MoreScreen() {
               className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
             />
           </Labelled>
+
+          <Labelled label="GSTIN Number">
+            <input
+              value={gstin}
+              onChange={(e) => setGstin(e.target.value)}
+              placeholder="27AABCS1429B1ZX"
+              className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground uppercase outline-none ring-1 ring-transparent focus:ring-primary/40"
+            />
+          </Labelled>
+
           <Labelled label="Mobile Number">
             <input
               value={phone}
@@ -3112,12 +3147,13 @@ export function MoreScreen() {
               className="w-full rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
             />
           </Labelled>
-          <Labelled label="Address">
+
+          <Labelled label="Business Address">
             <textarea
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               rows={2}
-              placeholder="Address"
+              placeholder="Full office or warehouse address"
               className="w-full resize-none rounded-xl bg-surface px-3.5 py-3 text-base text-foreground outline-none ring-1 ring-transparent focus:ring-primary/40"
             />
           </Labelled>
@@ -9617,79 +9653,79 @@ export async function saveState(state: AppStateData): Promise<void> {
 import type { Product } from "@/lib/types";
 
 export const seedProducts: Product[] = [
-  { id: "p1", name: "Matte Lipstick 6008 Mix Square", code: "6008 MIX SQUARE", buyingPrice: 19, sellingPrice: 22, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p2", name: "Matte Lipstick 6008 DD", code: "EGML 6008 DD", buyingPrice: 17, sellingPrice: 20, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED"], openingStock: 300, lowStockThreshold: 24 },
-  { id: "p3", name: "Star Lipstick", code: "EGL-23 NEW STAR", buyingPrice: 6, sellingPrice: 7, unit: "Pcs", category: "Lip", hasVariants: false, shades: ["MIX"], openingStock: 300, lowStockThreshold: 24 },
-  { id: "p4", name: "Mini Lipgloss", code: "EGL 3004", buyingPrice: 9, sellingPrice: 11, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE"], openingStock: 432, lowStockThreshold: 24 },
-  { id: "p5", name: "2 in 1 Liquid Lipstick", code: "EGL-21", buyingPrice: 34, sellingPrice: 40, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p6", name: "Lipgloss 028", code: "EGLG 028", buyingPrice: 21, sellingPrice: 25, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 48, lowStockThreshold: 24 },
-  { id: "p7", name: "Lipgloss 2005 BB", code: "EGL 2005 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 216, lowStockThreshold: 24 },
-  { id: "p8", name: "Lipgloss 2006 BB", code: "EGL 2006 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 216, lowStockThreshold: 24 },
-  { id: "p9", name: "Lipgloss 3003 BB", code: "EGLG 3003 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 216, lowStockThreshold: 24 },
-  { id: "p10", name: "Lip Gloss 001", code: "EGLL 001", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p11", name: "Lip Gloss 002", code: "EGLL 002", buyingPrice: 29, sellingPrice: 34, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p12", name: "Lip Gloss 003", code: "EGLL 003", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p13", name: "Lip Gloss 004", code: "EGLL 004", buyingPrice: 30, sellingPrice: 35, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p14", name: "Lip Gloss 006", code: "EGLL 006", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p15", name: "Lip Gloss 007", code: "EGLL 007", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p16", name: "Lip Gloss 008", code: "EGLL 008", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p17", name: "Lip Gloss 009", code: "EGLL 009", buyingPrice: 32, sellingPrice: 38, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p18", name: "Lip Gloss 010", code: "EGLL 010", buyingPrice: 32, sellingPrice: 38, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p19", name: "Non Transfer Lipstick 101", code: "EGNT 101", buyingPrice: 48, sellingPrice: 56, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE", "WINE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p20", name: "Non Transfer Lipstick Tray Set (3+1 Free)", code: "EGNT 102", buyingPrice: 76, sellingPrice: 90, unit: "Set", category: "Lip", hasVariants: false, shades: ["18 SHADES"], openingStock: 24, lowStockThreshold: 24 },
+  { id: "p1", name: "Matte Lipstick 6008 Mix Square", code: "6008 MIX SQUARE", buyingPrice: 19, sellingPrice: 22, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p2", name: "Matte Lipstick 6008 DD", code: "EGML 6008 DD", buyingPrice: 17, sellingPrice: 20, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p3", name: "Star Lipstick", code: "EGL-23 NEW STAR", buyingPrice: 6, sellingPrice: 7, unit: "Pcs", category: "Lip", hasVariants: false, shades: ["MIX"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p4", name: "Mini Lipgloss", code: "EGL 3004", buyingPrice: 9, sellingPrice: 11, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p5", name: "2 in 1 Liquid Lipstick", code: "EGL-21", buyingPrice: 34, sellingPrice: 40, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p6", name: "Lipgloss 028", code: "EGLG 028", buyingPrice: 21, sellingPrice: 25, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p7", name: "Lipgloss 2005 BB", code: "EGL 2005 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p8", name: "Lipgloss 2006 BB", code: "EGL 2006 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p9", name: "Lipgloss 3003 BB", code: "EGLG 3003 BB", buyingPrice: 24, sellingPrice: 28, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p10", name: "Lip Gloss 001", code: "EGLL 001", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p11", name: "Lip Gloss 002", code: "EGLL 002", buyingPrice: 29, sellingPrice: 34, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p12", name: "Lip Gloss 003", code: "EGLL 003", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p13", name: "Lip Gloss 004", code: "EGLL 004", buyingPrice: 30, sellingPrice: 35, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p14", name: "Lip Gloss 006", code: "EGLL 006", buyingPrice: 31, sellingPrice: 37, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p15", name: "Lip Gloss 007", code: "EGLL 007", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p16", name: "Lip Gloss 008", code: "EGLL 008", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p17", name: "Lip Gloss 009", code: "EGLL 009", buyingPrice: 32, sellingPrice: 38, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p18", name: "Lip Gloss 010", code: "EGLL 010", buyingPrice: 32, sellingPrice: 38, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX (AB)", "RED", "MEHROON", "NUDE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p19", name: "Non Transfer Lipstick 101", code: "EGNT 101", buyingPrice: 48, sellingPrice: 56, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["MIX", "RED", "MEHROON", "NUDE", "WINE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p20", name: "Non Transfer Lipstick Tray Set (3+1 Free)", code: "EGNT 102", buyingPrice: 76, sellingPrice: 90, unit: "Set", category: "Lip", hasVariants: false, shades: ["18 SHADES"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p21", name: "36-H Eye Pencil", code: "EGP-203", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p22", name: "Eyeliner Pen", code: "EGEP 004", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p23", name: "Endless Black Kajal", code: "EGKJ 002", buyingPrice: 30, sellingPrice: 35, unit: "Pcs", category: "Eye", hasVariants: true, shades: ["BLACK", "WHITE"], openingStock: 180, lowStockThreshold: 24 },
-  { id: "p24", name: "Tray Kajal (12 Pc Tray Pack)", code: "SYKJ 007", buyingPrice: 26, sellingPrice: 30, unit: "Pcs", category: "Eye", hasVariants: true, shades: ["BLACK", "JET BLACK", "PEARL BLACK"], openingStock: 240, lowStockThreshold: 24 },
-  { id: "p25", name: "Lipliner", code: "EGP-9002", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["1 NO.", "10 NO.", "13 NO.", "16 NO.", "23 NO.", "AB MIX"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p23", name: "Endless Black Kajal", code: "EGKJ 002", buyingPrice: 30, sellingPrice: 35, unit: "Pcs", category: "Eye", hasVariants: true, shades: ["BLACK", "WHITE"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p24", name: "Tray Kajal (12 Pc Tray Pack)", code: "SYKJ 007", buyingPrice: 26, sellingPrice: 30, unit: "Pcs", category: "Eye", hasVariants: true, shades: ["BLACK", "JET BLACK", "PEARL BLACK"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p25", name: "Lipliner", code: "EGP-9002", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Lip", hasVariants: true, shades: ["1 NO.", "10 NO.", "13 NO.", "16 NO.", "23 NO.", "AB MIX"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p26", name: "Hair Spray", code: "ENZO", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Hair", hasVariants: false, shades: ["STRONG"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p27", name: "Crazy Lipbalm", code: "EGLB 6101", buyingPrice: 80, sellingPrice: 94, unit: "Box", category: "Lip", hasVariants: false, shades: ["MIX COLORS"], openingStock: 10, lowStockThreshold: 24 },
-  { id: "p28", name: "18 Color Eyeshadow", code: "EGES 8001", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p29", name: "14 Color Eyeshadow", code: "EGES 8038", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p30", name: "4 Colour Blusher", code: "EGES-8004", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p31", name: "7 Color Eyeshadow", code: "SYES 209", buyingPrice: 51, sellingPrice: 60, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p32", name: "12 Color Eyeshadow", code: "SYES 210", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p27", name: "Crazy Lipbalm", code: "EGLB 6101", buyingPrice: 80, sellingPrice: 94, unit: "Box", category: "Lip", hasVariants: false, shades: ["MIX COLORS"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p28", name: "18 Color Eyeshadow", code: "EGES 8001", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p29", name: "14 Color Eyeshadow", code: "EGES 8038", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p30", name: "4 Colour Blusher", code: "EGES-8004", buyingPrice: 37, sellingPrice: 44, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p31", name: "7 Color Eyeshadow", code: "SYES 209", buyingPrice: 51, sellingPrice: 60, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["3 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p32", name: "12 Color Eyeshadow", code: "SYES 210", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p33", name: "12 Color Eyeshadow (057)", code: "SYES 057", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p34", name: "36 Color Eyeshadow", code: "EGES 8004 AA", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 24, lowStockThreshold: 24 },
-  { id: "p35", name: "37 Color Eyeshadow", code: "EGES 8004 BB", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 24, lowStockThreshold: 24 },
-  { id: "p36", name: "40 Color Eyeshadow", code: "EGES 8004 CC", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 24, lowStockThreshold: 24 },
+  { id: "p34", name: "36 Color Eyeshadow", code: "EGES 8004 AA", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p35", name: "37 Color Eyeshadow", code: "EGES 8004 BB", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p36", name: "40 Color Eyeshadow", code: "EGES 8004 CC", buyingPrice: 132, sellingPrice: 155, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p37", name: "54 Color Eyeshadow", code: "EGES 8004 DD", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p38", name: "12 Color Glitter", code: "EG-4011", buyingPrice: 66, sellingPrice: 78, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p39", name: "24 Colour Concealer Palette", code: "SYCP-002", buyingPrice: 76, sellingPrice: 90, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADES"], openingStock: 36, lowStockThreshold: 24 },
-  { id: "p40", name: "22 Colours Make Up Kit", code: "EGES-8017 BB", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p41", name: "13 Colours Make Up Kit", code: "EGES 8018", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p42", name: "21 Colours Make Up Kit", code: "EGES 8019", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p43", name: "17 Colours Make Up Kit", code: "EGES-8021", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p44", name: "17 Colours Make Up Kit (8043)", code: "EGES 8043", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p38", name: "12 Color Glitter", code: "EG-4011", buyingPrice: 66, sellingPrice: 78, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p39", name: "24 Colour Concealer Palette", code: "SYCP-002", buyingPrice: 76, sellingPrice: 90, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p40", name: "22 Colours Make Up Kit", code: "EGES-8017 BB", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p41", name: "13 Colours Make Up Kit", code: "EGES 8018", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p42", name: "21 Colours Make Up Kit", code: "EGES 8019", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p43", name: "17 Colours Make Up Kit", code: "EGES-8021", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p44", name: "17 Colours Make Up Kit (8043)", code: "EGES 8043", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADE (MIX)"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p45", name: "24 Colours Medium Kit", code: "EGES-8041", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["1 SHADE"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p46", name: "22 Colours Make Up Kit", code: "EGES-8044", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["1 SHADE"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p47", name: "Small Laptop Kit", code: "EG-8022", buyingPrice: 115, sellingPrice: 135, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADES MIX"], openingStock: 24, lowStockThreshold: 24 },
-  { id: "p48", name: "Single Colour Highlighter", code: "EGHL-4001", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: true, shades: ["2 NO.", "4 NO.", "5 NO.", "7 NO."], openingStock: 90, lowStockThreshold: 24 },
-  { id: "p49", name: "Brick Highlighter", code: "EGBH 4003", buyingPrice: 55, sellingPrice: 65, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p50", name: "Single Colour Rose Highlighter", code: "SYHL 088", buyingPrice: 34, sellingPrice: 40, unit: "Pcs", category: "Face", hasVariants: false, shades: ["MIX 6 COLORS"], openingStock: 90, lowStockThreshold: 24 },
-  { id: "p51", name: "2 in 1 Compact Green Tea", code: "EGCP 6806 GT", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p52", name: "2 in 1 Compact Baby Pink", code: "EGCP 6806 BP", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p53", name: "2 in 1 Compact Matte Pourless", code: "EGCP 6806 MP", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p54", name: "2 in 1 Compact (AA)", code: "EGCP 6806 AA", buyingPrice: 81, sellingPrice: 95, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 54, lowStockThreshold: 24 },
+  { id: "p47", name: "Small Laptop Kit", code: "EG-8022", buyingPrice: 115, sellingPrice: 135, unit: "Pcs", category: "Face", hasVariants: false, shades: ["2 SHADES MIX"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p48", name: "Single Colour Highlighter", code: "EGHL-4001", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: true, shades: ["2 NO.", "4 NO.", "5 NO.", "7 NO."], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p49", name: "Brick Highlighter", code: "EGBH 4003", buyingPrice: 55, sellingPrice: 65, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p50", name: "Single Colour Rose Highlighter", code: "SYHL 088", buyingPrice: 34, sellingPrice: 40, unit: "Pcs", category: "Face", hasVariants: false, shades: ["MIX 6 COLORS"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p51", name: "2 in 1 Compact Green Tea", code: "EGCP 6806 GT", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p52", name: "2 in 1 Compact Baby Pink", code: "EGCP 6806 BP", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p53", name: "2 in 1 Compact Matte Pourless", code: "EGCP 6806 MP", buyingPrice: 47, sellingPrice: 55, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p54", name: "2 in 1 Compact (AA)", code: "EGCP 6806 AA", buyingPrice: 81, sellingPrice: 95, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p55", name: "2 in 1 Compact (BB)", code: "EGCP 6806 BB", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p56", name: "2 in 1 Compact 001", code: "EGCP 001", buyingPrice: 81, sellingPrice: 95, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 54, lowStockThreshold: 24 },
-  { id: "p57", name: "2 in 1 Compact 004", code: "EGCP 004", buyingPrice: 61, sellingPrice: 72, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 54, lowStockThreshold: 24 },
-  { id: "p58", name: "Make Up Fixer", code: "EGMF 6201", buyingPrice: 64, sellingPrice: 75, unit: "Pcs", category: "Face", hasVariants: false, shades: ["LEMON FIXER"], openingStock: 72, lowStockThreshold: 24 },
+  { id: "p56", name: "2 in 1 Compact 001", code: "EGCP 001", buyingPrice: 81, sellingPrice: 95, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p57", name: "2 in 1 Compact 004", code: "EGCP 004", buyingPrice: 61, sellingPrice: 72, unit: "Pcs", category: "Face", hasVariants: false, shades: ["4 SHADES MIX"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p58", name: "Make Up Fixer", code: "EGMF 6201", buyingPrice: 64, sellingPrice: 75, unit: "Pcs", category: "Face", hasVariants: false, shades: ["LEMON FIXER"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p59", name: "Face Serum", code: "EGFS 001", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 FLAVOUR"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p60", name: "Matte Mousse Red Foundation", code: "EGFD-6703 AA", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX)"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p61", name: "CC Foundation", code: "EGFD-6703 BB", buyingPrice: 56, sellingPrice: 66, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 108, lowStockThreshold: 24 },
+  { id: "p61", name: "CC Foundation", code: "EGFD-6703 BB", buyingPrice: 56, sellingPrice: 66, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p62", name: "Color Change Foundation", code: "EGFD 6704", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["SINGLE SHADE"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p63", name: "Golden Cap Foundation", code: "EGFD 6706 AA", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 36, lowStockThreshold: 24 },
-  { id: "p64", name: "Pink Cap Foundation", code: "EGFD 6706 BB", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 36, lowStockThreshold: 24 },
-  { id: "p65", name: "Eyeliner 204", code: "EGEL 204", buyingPrice: 38, sellingPrice: 45, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p66", name: "Mascara 204", code: "EGMS 204", buyingPrice: 42, sellingPrice: 50, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p67", name: "Eyeliner 205", code: "EGEL 205", buyingPrice: 38, sellingPrice: 45, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p68", name: "Mascara 205", code: "EGMS 205", buyingPrice: 42, sellingPrice: 50, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p69", name: "Silicon Primer", code: "EGPR-010", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Face", hasVariants: false, shades: ["TRANSPARENT"], openingStock: 108, lowStockThreshold: 24 },
+  { id: "p63", name: "Golden Cap Foundation", code: "EGFD 6706 AA", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p64", name: "Pink Cap Foundation", code: "EGFD 6706 BB", buyingPrice: 70, sellingPrice: 82, unit: "Pcs", category: "Face", hasVariants: false, shades: ["3 SHADES (MIX IN 1 BOX)"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p65", name: "Eyeliner 204", code: "EGEL 204", buyingPrice: 38, sellingPrice: 45, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p66", name: "Mascara 204", code: "EGMS 204", buyingPrice: 42, sellingPrice: 50, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p67", name: "Eyeliner 205", code: "EGEL 205", buyingPrice: 38, sellingPrice: 45, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p68", name: "Mascara 205", code: "EGMS 205", buyingPrice: 42, sellingPrice: 50, unit: "Pcs", category: "Eye", hasVariants: false, shades: ["BLACK"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p69", name: "Silicon Primer", code: "EGPR-010", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Face", hasVariants: false, shades: ["TRANSPARENT"], openingStock: 0, lowStockThreshold: 0 },
   { id: "p70", name: "Silky Primer", code: "EGPR-011", buyingPrice: 0, sellingPrice: 0, unit: "Pcs", category: "Face", hasVariants: false, shades: ["TRANSPARENT"], openingStock: 0, lowStockThreshold: 0 },
-  { id: "p71", name: "Lumi Primer", code: "EGPR-012", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Face", hasVariants: true, shades: ["GOLD GLITTER", "SILVER GLITTER", "PINK GLITTER"], openingStock: 144, lowStockThreshold: 24 },
-  { id: "p72", name: "Nail Polish 003", code: "EGNP 003", buyingPrice: 17, sellingPrice: 20, unit: "Pcs", category: "Nail Care", hasVariants: true, shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "METTALIC", "SPECIAL MATT", "NUDE PASTEL"], openingStock: 72, lowStockThreshold: 24 },
-  { id: "p73", name: "Nail Polish 008", code: "EGNP 008", buyingPrice: 10, sellingPrice: 12, unit: "Pcs", category: "Nail Care", hasVariants: true, shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "CHANDI CLR", "SPECIAL MATT", "NUDE PASTEL"], openingStock: 36, lowStockThreshold: 24 },
+  { id: "p71", name: "Lumi Primer", code: "EGPR-012", buyingPrice: 60, sellingPrice: 70, unit: "Pcs", category: "Face", hasVariants: true, shades: ["GOLD GLITTER", "SILVER GLITTER", "PINK GLITTER"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p72", name: "Nail Polish 003", code: "EGNP 003", buyingPrice: 17, sellingPrice: 20, unit: "Pcs", category: "Nail Care", hasVariants: true, shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "METTALIC", "SPECIAL MATT", "NUDE PASTEL"], openingStock: 0, lowStockThreshold: 0 },
+  { id: "p73", name: "Nail Polish 008", code: "EGNP 008", buyingPrice: 10, sellingPrice: 12, unit: "Pcs", category: "Nail Care", hasVariants: true, shades: ["DISCO", "MATT 1", "MATT 2", "RED MATT", "RED MEH MATT", "CHANDI CLR", "SPECIAL MATT", "NUDE PASTEL"], openingStock: 0, lowStockThreshold: 0 },
 ];
 
 
@@ -9707,24 +9743,24 @@ import type {
   Transaction,
 } from "@/lib/types";
 
-// 1. इन्हें पहले फाइल के अंदर इम्पोर्ट करें ताकि buildDefaults() इन्हें पहचान सके
 import { seedProducts } from "./products";
 import { seedShops } from "./shops";
 
-// 2. और इन्हें यहीं से वापस एक्सपोर्ट भी करें ताकि बाकी फाइलें भी इनका इस्तेमाल कर सकें
 export { seedProducts, seedShops };
 
 const seedProfile: Profile = {
-  name: "Rahul Sharma",
-  role: "Senior Sales Executive",
-  zone: "North Zone - Beat Sector 4",
+  name: "Manish Mehta",
+  companyName: "SalesBeat Distributors",
+  role: "Distributor",
+  zone: "Amritsar Sector",
   online: true,
-  phone: "+91 98200 45678",
-  address: "Flat 402, Shanti Residency, Pune 411001",
+  phone: "",
+  address: "Amritsar, Punjab",
+  gstin: "07AABCS1429B1ZX",
 };
 
 const seedBeats: Beat[] = [
-  { id: "rambagh", name: "Rambagh", area: "Central District - Zone A", location: "Central District", salesToday: 4500 },
+  { id: "rambagh", name: "Rambagh", area: "Central District - Zone A", location: "Central District", salesToday: 0 },
   { id: "city-center", name: "City Center", area: "Downtown Metro Hub", location: "Downtown", salesToday: 0 },
   { id: "commercial-hub", name: "Commercial Hub", area: "Trade Tower Complex", location: "Trade Tower", salesToday: 0 },
   { id: "station-road", name: "Station Road", area: "East Transit Line", location: "East Transit", salesToday: 0 },
@@ -9732,50 +9768,17 @@ const seedBeats: Beat[] = [
   { id: "market-yard", name: "Market Yard", area: "South Wholesale Zone", location: "South Zone", salesToday: 0 },
 ];
 
-const seedTransactions: Transaction[] = [
-  {
-    id: "t1",
-    type: "order",
-    title: "Order: Gupta Provision Hub",
-    subtitle: "Rambagh • 10x Matte Lipstick 6008, 5x Mini Lipgloss, 2x Endless Black Kajal",
-    amount: 345,
-    time: "10:15 AM",
-  },
-  {
-    id: "t2",
-    type: "collection",
-    title: "Collection: Apex Supermarket",
-    subtitle: "Mode: UPI • Ref: RCP-88902",
-    amount: 5000,
-    time: "11:30 AM",
-  },
-];
+const seedTransactions: Transaction[] = [];
 
-const seedOrders: Order[] = [
-  {
-    id: "o-seed-1",
-    shopId: "s2",
-    shopName: "Gupta Provision Hub",
-    beatName: "Rambagh",
-    lines: [
-      { productId: "p1", qty: 10, price: 22 },
-      { productId: "p4", qty: 5, price: 11 },
-      { productId: "p23", qty: 2, price: 35 },
-    ],
-    total: 345,
-    summary: "10x Matte Lipstick 6008 Mix Square, 5x Mini Lipgloss, 2x Endless Black Kajal",
-    status: "pending",
-    createdAt: "2026-01-01T04:45:00.000Z",
-  },
-];
+const seedOrders: Order[] = [];
 
 export function buildDefaults(): PersistedState {
   return {
     profile: seedProfile,
     dailyTarget: 60000,
     beats: seedBeats,
-    shops: seedShops,       // अब यह यहाँ बिल्कुल सही काम करेगा
-    products: seedProducts, // अब यह भी यहाँ बिल्कुल सही काम करेगा
+    shops: seedShops,       
+    products: seedProducts, 
     transactions: seedTransactions,
     orders: seedOrders,
     purchaseBills: [] as PurchaseBill[],
@@ -9791,19 +9794,7 @@ export function buildDefaults(): PersistedState {
 
 import type { Shop } from "@/lib/types";
 
-export const seedShops: Shop[] = [
-  { id: "s1", beatId: "rambagh", name: "Sharma Kirana Store", owner: "Ramesh Sharma", phone: "+91 98765 12345", address: "Shop 14, Main Bazaar, Rambagh", dues: 14500, status: "pending" },
-  { id: "s2", beatId: "rambagh", name: "Gupta Provision Hub", owner: "Suresh Gupta", phone: "+91 98123 45678", address: "45 Station Road, Rambagh", dues: 8200, status: "ordered", orderAmount: 345 },
-  { id: "s3", beatId: "rambagh", name: "Verma General Store", owner: "Anil Varma", phone: "+91 99887 76655", address: "Mall Road, Rambagh", dues: 17000, status: "paid", paidAmount: 5000 },
-  { id: "s4", beatId: "rambagh", name: "Royal Traders", owner: "Vikram Singh", phone: "+91 97654 32109", address: "Sector 3 Market, Rambagh", dues: 5400, status: "pending" },
-  { id: "s5", beatId: "city-center", name: "Apex Supermarket", owner: "Neha Jain", phone: "+91 90000 11111", address: "MG Road, City Center", dues: 22000, status: "pending" },
-  { id: "s6", beatId: "city-center", name: "Metro Cash & Carry", owner: "Rohit Mehta", phone: "+91 90000 22222", address: "Metro Plaza, City Center", dues: 18000, status: "pending" },
-  { id: "s7", beatId: "city-center", name: "Star Bazaar", owner: "Kavya Rao", phone: "+91 90000 33333", address: "Ring Road, City Center", dues: 14000, status: "pending" },
-  { id: "s8", beatId: "commercial-hub", name: "Prime Wholesale", owner: "Amit Shah", phone: "+91 90000 44444", address: "Tower A, Commercial Hub", dues: 30000, status: "pending" },
-  { id: "s9", beatId: "commercial-hub", name: "Unity Distributors", owner: "Sana Khan", phone: "+91 90000 55555", address: "Tower C, Commercial Hub", dues: 27000, status: "pending" },
-  { id: "s10", beatId: "station-road", name: "Transit Mart", owner: "Deepak Nair", phone: "+91 90000 66666", address: "Platform Lane, Station Road", dues: 9100, status: "pending" },
-  { id: "s11", beatId: "station-road", name: "Junction Stores", owner: "Priya Das", phone: "+91 90000 77777", address: "Exit Gate, Station Road", dues: 7000, status: "pending" },
-];
+export const seedShops: Shop[] = [];
 
 
 
@@ -10515,8 +10506,8 @@ export type ScreenName =
   | "dispatch"
   | "invoice"
   | "dispatchHistory"
-  | "deliveryMenu"    // <-- नया जोड़ा गया
-  | "ordersHistory";  // <-- नया जोड़ा गया
+  | "deliveryMenu"
+  | "ordersHistory";
 
 export type ScreenEntry = {
   name: ScreenName;
@@ -10537,8 +10528,8 @@ export type Shop = {
   orderAmount?: number;
   paidAmount?: number;
   lastSellingPrices?: Record<string, number>;
-  whatsapp?: string;       // <-- नया जोड़ा गया
-  lastOrderDate?: string;  // <-- नया जोड़ा गया
+  whatsapp?: string;
+  lastOrderDate?: string;
 };
 
 export type Beat = {
@@ -10592,8 +10583,8 @@ export type OrderLineStatus = "pending" | "delivered" | "cancelled" | "backorder
 export type OrderLine = {
   productId: string;
   qty: number;
-  price: number; // Selling Price
-  buyingPrice?: number; // Margin track karne ke liye
+  price: number;
+  buyingPrice?: number;
   dispatchedQty?: number;
   status?: OrderLineStatus;
 };
@@ -10607,7 +10598,7 @@ export type Order = {
   beatName: string;
   lines: OrderLine[];
   total: number;
-  totalMargin?: number; // Is order par total profit
+  totalMargin?: number;
   summary: string;
   status: OrderStatus;
   createdAt: string;
@@ -10644,12 +10635,6 @@ export type DispatchRecord = {
 
 export const TAX_RATE = 0.18;
 
-export const DISTRIBUTOR = {
-  name: "SalesBeat Distributors Pvt. Ltd.",
-  gstin: "27AABCS1429B1ZX",
-  address: "Warehouse 12, Industrial Estate, Pune 411019",
-};
-
 export type PurchaseBillLine = {
   productId: string;
   qty: number;
@@ -10684,11 +10669,13 @@ export type StockLevels = {
 
 export type Profile = {
   name: string;
+  companyName: string; // डिस्ट्रीब्यूटरशिप या फर्म का नाम
   role: string;
   zone: string;
   online: boolean;
   phone: string;
   address: string;
+  gstin: string; // जीएसटी नंबर
 };
 
 export type PersistedState = {
@@ -10976,12 +10963,16 @@ export function createDispatch(
 
   const remainingLines = lines.filter((line) => line.remainingQty > 0);
   const fullyDispatched = remainingLines.length === 0;
-  const subTotal = lines.reduce(
+
+  // 18% GST Inclusive Reverse Calculation for Dispatch / Invoice
+  const totalInclusive = lines.reduce(
     (total, line) => total + line.dispatchedQty * line.price,
     0,
   );
-  const tax = Math.round(subTotal * 0.18 * 100) / 100;
-  const grandTotal = subTotal + tax;
+  
+  const grandTotal = Math.round(totalInclusive * 100) / 100;
+  const subTotal = Math.round((grandTotal / 1.18) * 100) / 100;
+  const tax = Math.round((grandTotal - subTotal) * 100) / 100;
 
   const dispatch: DispatchRecord = {
     id: dispatchId,
@@ -11187,12 +11178,26 @@ export function createOrder(
   const enrichedLines = lines.map((line) => {
     const product = products.find(p => p.id === line.productId);
     const buyingPrice = line.buyingPrice ?? product?.buyingPrice ?? 0;
-    const marginPerItem = line.price - buyingPrice;
+    
+    // 18% GST Inclusive Reverse Calculation
+    // line.price is inclusive of GST (e.g., ₹22)
+    const inclusivePrice = line.price;
+    const basePrice = inclusivePrice / 1.18; // Taxable value without GST
+    const gstAmountPerItem = inclusivePrice - basePrice;
 
-    total += line.qty * line.price;
+    // Margin calculation based on base price vs buying price
+    const marginPerItem = basePrice - buyingPrice;
+
+    total += line.qty * inclusivePrice;
     totalMargin += line.qty * marginPerItem;
 
-    return { ...line, buyingPrice };
+    return { 
+      ...line, 
+      price: inclusivePrice, // Final inclusive price
+      basePrice: Number(basePrice.toFixed(2)),
+      gstAmount: Number(gstAmountPerItem.toFixed(2)),
+      buyingPrice 
+    };
   });
 
   const summary = enrichedLines
@@ -11205,8 +11210,8 @@ export function createOrder(
     shopName: shop.name,
     beatName,
     lines: enrichedLines,
-    total,
-    totalMargin,
+    total: Number(total.toFixed(2)),
+    totalMargin: Number(totalMargin.toFixed(2)),
     summary,
     status: "pending",
     createdAt,
@@ -11331,7 +11336,7 @@ import type { Profile } from "@/lib/types";
 
 export type EditableProfileFields = Pick<
   Profile,
-  "name" | "phone" | "address"
+  "name" | "companyName" | "phone" | "address" | "gstin"
 >;
 
 export function updateProfile(
